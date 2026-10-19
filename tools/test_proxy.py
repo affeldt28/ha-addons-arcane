@@ -13,6 +13,7 @@ import uuid
 from pathlib import Path
 from check_policy import CASES, root, policy
 from http_probe import request_http
+from build_image import build_image
 
 def docker(*args):
     try:
@@ -37,7 +38,7 @@ class UnixHTTP(socketserver.ThreadingMixIn,socketserver.UnixStreamServer):
     daemon_threads = True
 
 image = 'arcane-monitor-test:local'
-docker('build','-t',image,str(root/'arcane_edge_agent'))
+build_image(image, root/'arcane_edge_agent')
 with tempfile.TemporaryDirectory() as temp:
     fake_socket = Path(temp)/'docker.sock'
     server = UnixHTTP(str(fake_socket),FakeDocker)

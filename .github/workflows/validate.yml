@@ -4,6 +4,7 @@ on:
   pull_request:
 permissions:
   contents: read
+  packages: read
 jobs:
   proxy-policy:
     runs-on: ubuntu-latest
@@ -16,4 +17,12 @@ jobs:
       - name: Lint monitor startup
         run: shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor
       - run: python3 tools/check_policy.py
+      - name: Test registry retry behavior
+        run: python3 -m unittest discover -s tools -p test_build_image.py
+      - name: Authenticate to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - run: python3 tools/test_proxy.py
