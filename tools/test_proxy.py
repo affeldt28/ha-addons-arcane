@@ -1,5 +1,6 @@
 """Exercise the packaged monitor proxy with a fake socket, never the host socket."""
 import http.server
+import http.client
 import json
 import os
 import socketserver
@@ -8,8 +9,10 @@ import tempfile
 import sys
 import threading
 import time
+import uuid
 from pathlib import Path
-from check_policy import CASES, root
+from check_policy import CASES, root, policy
+from http_probe import request_http
 
 def docker(*args):
     try:
@@ -52,23 +55,25 @@ with tempfile.TemporaryDirectory() as temp:
                'test ! -w /var/run/docker.sock && test "$(id -G)" = 65532 && '
                'test "$(awk \'/^CapEff:/ {print $2}\' /proc/self/status)" = 0000000000000000')
         def request(method,path):
-            raw = docker('exec',container,'su-exec','65532:65532','sh','-c',
-                'printf "%s %s HTTP/1.0\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n" '
-                '"$1" "$2" | nc -w 2 127.0.0.1 2375','client',method,path)
-            return int(raw.splitlines()[0].split()[1])
+            # Keep stdin open while reading: piping printf into BusyBox nc can
+            # close the connection before the proxy/fake Docker server responds.
+            return request_http(['docker','exec','-i',container,'su-exec','65532:65532',
+                                 'nc','-w','5','127.0.0.1','2375'], method, path)
         for attempt in range(30):
             try:
                 if request('GET','/_ping') == 200:
                     break
-            except (subprocess.CalledProcessError,IndexError,ValueError):
+            except (subprocess.CalledProcessError,http.client.HTTPException,OSError):
                 pass
             time.sleep(.1)
         else:
-            raise AssertionError('Proxy did not become ready')
+            raise AssertionError(f'Proxy did not become ready: {docker("logs",container)}')
         for method,path,allowed in CASES + [('GET','/containers/json?all=1',True),('GET','/containers/abc/archive?path=/etc',False)]:
             before = len(forwarded)
             status = request(method,path)
-            assert status == (200 if allowed else 403), (method,path,status)
+            # Unsupported HTTP methods are 405; blocked paths on allowed methods are 403.
+            expected = 200 if allowed else (403 if method in policy else 405)
+            assert status == expected, (method,path,status,expected)
             assert len(forwarded) == before + int(allowed), (method,path,'unexpected forwarding')
         print('Actual loopback proxy enforced the monitoring policy; agent user cannot open real socket.')
     finally:
@@ -112,11 +117,41 @@ exec sleep 300
         # The entrypoint owns its state as UID 65532; remove only this fake test state.
         docker('run','--rm','--entrypoint','/bin/sh','-v',f'{data}:/fixture',
                image,'-c','rm -rf /fixture/arcane')
-    # Keep the fail-closed permission regression test as well.
-    os.chmod(fake_socket,0o666)
-    result = subprocess.run(['docker','run','--rm','-v',f'{fake_socket}:/var/run/docker.sock:ro',
-        '-v',f'{data}:/data',image],capture_output=True,text=True,timeout=15)
-    assert result.returncode != 0 and 'socket is accessible to the agent user' in result.stderr, result
-    print('Startup guard refuses a Docker socket accessible to the agent user.')
+    # Create the insecure socket on a native Linux volume: Docker Desktop can
+    # virtualize permissions on host-mounted Unix sockets, hiding chmod changes.
+    volume = 'arcane-guard-test-' + uuid.uuid4().hex
+    docker('volume','create',volume)
+    fixture = None
+    guarded = None
+    try:
+        fixture = docker('run','-d','--entrypoint','/usr/local/bin/socket-proxy',
+            '-v',f'{fake_socket}:/var/run/docker.sock:ro', '-v',f'{volume}:/fixture', image,
+            '-proxysocketendpoint=/fixture/docker.sock',
+            '-proxysocketendpointfilemode=0666')
+        for attempt in range(30):
+            probe = subprocess.run(['docker','exec',fixture,'test','-S','/fixture/docker.sock'])
+            if probe.returncode == 0:
+                break
+            time.sleep(.1)
+        else:
+            raise AssertionError(f'Guard fixture not ready: {docker("logs",fixture)}')
+        guarded = docker('create','-v',f'{volume}:/var/run:ro','-v',f'{data}:/data',image)
+        docker('start',guarded)
+        for attempt in range(50):
+            if docker('inspect','--format','{{.State.Running}}',guarded) == 'false':
+                break
+            time.sleep(.1)
+        else:
+            raise AssertionError(f'Guard did not reject accessible socket: {docker("logs",guarded)}')
+        logs = docker('logs',guarded)
+        assert docker('inspect','--format','{{.State.ExitCode}}',guarded) != '0'
+        assert 'socket is accessible to the agent user' in logs, logs
+        print('Startup guard refuses a Docker socket accessible to the agent user.')
+    finally:
+        if guarded:
+            docker('rm','-f',guarded)
+        if fixture:
+            docker('rm','-f',fixture)
+        docker('volume','rm',volume)
     server.shutdown()
     server.server_close()
