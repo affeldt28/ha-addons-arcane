@@ -5,7 +5,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 monitor = json.loads((root/'arcane_edge_agent/config.json').read_text())
 full = json.loads((root/'arcane_edge_agent_full/config.json').read_text())
-policy = json.loads((root/'arcane_edge_agent/policy.json').read_text())
+policy = json.loads((root/'arcane_edge_agent/rootfs/etc/arcane-monitor/policy.json').read_text())
 assert set(p.parent.name for p in root.glob('*/config.json')) == {'arcane_edge_agent','arcane_edge_agent_full'}
 assert monitor['docker_api'] and full['docker_api']
 assert set(policy) == {'GET','HEAD'}

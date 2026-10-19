@@ -1,0 +1,11 @@
+---
+configuration:
+  MANAGER_API_URL:
+    name: "Arcane Manager URL"
+    description: "The Manager URL from your generated Arcane Edge configuration. Use HTTPS for remote connections."
+  AGENT_TOKEN:
+    name: "Edge agent token"
+    description: "The secret token generated for this Edge environment. Do not reuse another agent's token."
+  EDGE_TRANSPORT:
+    name: "Edge transport"
+    description: "Poll is the default. Auto tries gRPC with a WebSocket fallback; websocket or grpc selects one transport."

@@ -10,4 +10,8 @@ file = root / 'repository.json'
 data = json.loads(file.read_text())
 data['url'] = sys.argv[1]
 file.write_text(json.dumps(data, indent=2) + '\n')
-print('Configured repository homepage. Add-ons need no hostname wiring.')
+for config in root.glob('*/config.json'):
+    addon = json.loads(config.read_text())
+    addon['url'] = sys.argv[1]
+    config.write_text(json.dumps(addon, indent=2) + '\n')
+print('Configured repository and add-on homepages. No hostname wiring is needed.')

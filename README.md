@@ -37,3 +37,11 @@ Monitor Only blocks writes, terminal/exec/attach, container archives and image e
 The Monitor Only package version is `2.16.1-1` (Arcane v2.16.1, packaging revision 1); Full Access pulls official `v2.16.1`. Monitor's proxy is pinned to 1.13.1. Update the agent/proxy pins and changelogs when releasing a new version.
 
 [Arcane Edge documentation](https://getarcane.app/docs/remote/environments) · [Arcane socket proxy documentation](https://getarcane.app/docs/security/socket-proxy) · [Home Assistant app configuration](https://contributors.home-assistant.io/apps/reference/configuration/)
+
+## Packaging reference
+
+The [Advanced SSH & Web Terminal add-on, v24.1.7](https://github.com/hassio-addons/app-ssh/tree/v24.1.7) is the packaging reference: one directory per add-on, `rootfs` container files, pinned image inputs, Home Assistant/OCI build labels, user-facing configuration descriptions, and separate README, setup and changelog files.
+
+These Arcane packages remain independent community projects. The monitor uses Docker's init plus its own two-process startup script (`init: true`); it does not use the reference's S6 base, so copying `init: false` would be incorrect. Full Access continues to use the official Arcane image and `legacy: true`. JSON manifests are Home Assistant-supported equivalents of the reference's YAML manifests. Terminal-specific ingress, host networking, hardware access and Supervisor API permissions are not required for either Edge agent.
+
+The optional repository-configuration tool also sets the homepage shown in each add-on's Info tab. English configuration descriptions are supplied under each add-on's `translations` directory. CI checks the monitor startup with ShellCheck as well as the policy and container integration tests.
