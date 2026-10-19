@@ -2,7 +2,7 @@
 
 > **WARNING: unrestricted Docker control. The connected Manager can change or delete containers, images, networks and volumes, including resources used by Home Assistant. This can stop Home Assistant or cause data loss. Only connect to a Manager you trust.**
 
-1. Install **Arcane Edge Agent (Full Access — WARNING)** only if you intend to grant host Docker control.
+1. Install **Arcane Agent (Full Access)** only if you intend to grant host Docker control.
 2. In your separate Arcane Manager, create an Edge environment. If you also run Monitor Only, use a different environment and token.
 3. Set `MANAGER_API_URL`, `AGENT_TOKEN` and `EDGE_TRANSPORT` in Configuration. Poll is the default; auto, websocket and grpc are also available. Use HTTPS for remote connections.
 4. Disable Protection mode to permit Docker socket access. Start the add-on and confirm it connects. Start on boot is off by default; enable it after testing.

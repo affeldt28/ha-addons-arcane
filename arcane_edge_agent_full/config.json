@@ -7,10 +7,10 @@
   "boot": "manual",
   "stage": "experimental",
   "init": true,
-  "name": "Arcane Edge Agent (Full Access \u2014 WARNING)",
+  "name": "Arcane Agent (Full Access)",
   "version": "v2.16.1",
   "slug": "arcane_edge_agent_full",
-  "description": "WARNING: unrestricted Docker control can change or delete Home Assistant containers.",
+  "description": "WARNING: full Docker control.",
   "backup": "cold",
   "options": {
     "MANAGER_API_URL": "",
@@ -38,5 +38,6 @@
       "type": "data",
       "path": "/app/data"
     }
-  ]
+  ],
+  "url": "https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent_full"
 }

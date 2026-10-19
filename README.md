@@ -4,8 +4,8 @@ Two independently installable Edge agents for Home Assistant OS / Supervisor, co
 
 | Add-on | Docker access | Use it for |
 | --- | --- | --- |
-| **Arcane Edge Agent (Monitor Only)** | Built-in proxy permits selected inspection requests; Arcane runs as a separate unprivileged user | Container lists, logs, statistics, image/network/volume metadata |
-| **Arcane Edge Agent (Full Access — WARNING)** | Direct, unrestricted Docker socket | Deployments, updates, start/stop/restart, deletion, terminal sessions, images, networks and volumes |
+| **Arcane Agent (Monitor)** | Built-in proxy permits selected inspection requests; Arcane runs as a separate unprivileged user | Container lists, logs, statistics, image/network/volume metadata |
+| **Arcane Agent (Full Access)** | Direct, unrestricted Docker socket | Deployments, updates, start/stop/restart, deletion, terminal sessions, images, networks and volumes |
 
 > **WARNING — Full Access grants the connected Arcane Manager control over the Docker host, including Home Assistant and Supervisor containers. Operations can break Home Assistant or delete data. Only connect it to a trusted Manager.**
 
