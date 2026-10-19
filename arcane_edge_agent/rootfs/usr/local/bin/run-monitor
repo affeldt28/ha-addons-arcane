@@ -22,6 +22,8 @@ get_rule=$(jq -er .GET /etc/arcane-monitor/policy.json)
 head_rule=$(jq -er .HEAD /etc/arcane-monitor/policy.json)
 proxy_pid=
 agent_pid=
+# Invoked indirectly by the EXIT trap; ShellCheck versions report this differently.
+# shellcheck disable=SC2317,SC2329
 cleanup() {
     trap - EXIT INT TERM
     [ -z "$agent_pid" ] || kill "$agent_pid" 2>/dev/null || true
