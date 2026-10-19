@@ -1,0 +1,40 @@
+{
+  "arch": [
+    "amd64",
+    "aarch64"
+  ],
+  "startup": "services",
+  "boot": "auto",
+  "stage": "experimental",
+  "legacy": true,
+  "init": true,
+  "name": "Arcane Edge Agent (Monitoring)",
+  "version": "v2.16.1",
+  "slug": "arcane_edge_agent",
+  "description": "Monitor Home Assistant containers through a read-only Docker API proxy.",
+  "image": "ghcr.io/getarcaneapp/agent",
+  "backup": "cold",
+  "map": [
+    {
+      "type": "data",
+      "path": "/app/data"
+    }
+  ],
+  "environment": {
+    "EDGE_AGENT": "true",
+    "AGENT_MODE": "true",
+    "ENVIRONMENT": "production"
+  },
+  "options": {
+    "MANAGER_API_URL": "",
+    "AGENT_TOKEN": "",
+    "EDGE_TRANSPORT": "poll",
+    "DOCKER_HOST": "tcp://configure-proxy-hostname:2375"
+  },
+  "schema": {
+    "MANAGER_API_URL": "url",
+    "AGENT_TOKEN": "password",
+    "EDGE_TRANSPORT": "list(poll|auto|websocket|grpc)",
+    "DOCKER_HOST": "match(^tcp://[a-zA-Z0-9.-]+:2375$)"
+  }
+}
