@@ -34,7 +34,7 @@ Monitor Only blocks writes, terminal/exec/attach, container archives and image e
 - `python3 tools/test_proxy.py`: build Monitor Only and test the actual proxy against a fake Docker socket. Includes denial checks for the unprivileged agent user. Requires Docker; never mounts the real host socket.
 - CI runs these checks. Live HA OS installation, Arcane pairing, persistence and backup/restore still require testing on a device.
 
-The Monitor Only package version is `2.16.1-1` (Arcane v2.16.1, packaging revision 1); Full Access pulls official `v2.16.1`. Monitor's proxy is pinned to 1.13.1. Update the agent/proxy pins and changelogs when releasing a new version.
+The Monitor Only package version is `2.16.1-2` (Arcane v2.16.1, packaging revision 2); Full Access pulls official `v2.16.1`. Monitor's proxy is pinned to 1.13.1. Update the agent/proxy pins and changelogs when releasing a new version.
 
 [Arcane Edge documentation](https://getarcane.app/docs/remote/environments) · [Arcane socket proxy documentation](https://getarcane.app/docs/security/socket-proxy) · [Home Assistant app configuration](https://contributors.home-assistant.io/apps/reference/configuration/)
 

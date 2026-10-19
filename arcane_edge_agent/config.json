@@ -8,7 +8,7 @@
   "stage": "experimental",
   "init": true,
   "name": "Arcane Edge Agent (Monitor Only)",
-  "version": "2.16.1-1",
+  "version": "2.16.1-2",
   "slug": "arcane_edge_agent",
   "description": "Monitoring only: built-in Docker API filter blocks container changes.",
   "backup": "cold",

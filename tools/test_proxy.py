@@ -1,5 +1,6 @@
 """Exercise the packaged monitor proxy with a fake socket, never the host socket."""
 import http.server
+import json
 import os
 import socketserver
 import subprocess
@@ -72,11 +73,46 @@ with tempfile.TemporaryDirectory() as temp:
         print('Actual loopback proxy enforced the monitoring policy; agent user cannot open real socket.')
     finally:
         docker('rm','-f',container)
-    # Verify the real startup guard rejects a socket the unprivileged agent could access.
-    import json
+    # Exercise the actual entrypoint, not only the proxy: catches clean-PATH launch failures.
     data = Path(temp)/'data'
     data.mkdir()
     (data/'options.json').write_text(json.dumps({'MANAGER_API_URL':'http://invalid.test','AGENT_TOKEN':'fixture','EDGE_TRANSPORT':'poll'}))
+    fake_agent = Path(temp)/'fake-agent'
+    fake_agent.write_text("""#!/bin/sh
+set -eu
+[ "$(id -u)" = 65532 ]
+[ "$(id -G)" = 65532 ]
+[ "$DOCKER_HOST" = tcp://127.0.0.1:2375 ]
+[ "${SUPERVISOR_TOKEN-unset}" = unset ]
+test ! -w /var/run/docker.sock
+printf 'ENTRYPOINT_TEST_AGENT_STARTED\\n'
+exec sleep 300
+""")
+    os.chmod(fake_agent,0o755)
+    started = docker('run','-d','--init',
+        '-e','SUPERVISOR_TOKEN=must-not-reach-agent',
+        '-v',f'{fake_socket}:/var/run/docker.sock:ro',
+        '-v',f'{data}:/data', '-v',f'{fake_agent}:/app/arcane-agent:ro', image)
+    try:
+        for attempt in range(60):
+            logs = docker('logs',started)
+            if 'ENTRYPOINT_TEST_AGENT_STARTED' in logs:
+                break
+            if docker('inspect','--format','{{.State.Running}}',started) != 'true':
+                raise AssertionError(f'Monitor entrypoint exited before agent startup: {logs}')
+            time.sleep(.1)
+        else:
+            raise AssertionError(f'Monitor entrypoint never launched agent: {docker("logs",started)}')
+        assert 'Connection refused' not in logs, logs
+        docker('stop','-t','15',started)
+        assert docker('inspect','--format','{{.State.ExitCode}}',started) == '0'
+        print('Actual monitor entrypoint launches the agent unprivileged and stops cleanly.')
+    finally:
+        docker('rm','-f',started)
+        # The entrypoint owns its state as UID 65532; remove only this fake test state.
+        docker('run','--rm','--entrypoint','/bin/sh','-v',f'{data}:/fixture',
+               image,'-c','rm -rf /fixture/arcane')
+    # Keep the fail-closed permission regression test as well.
     os.chmod(fake_socket,0o666)
     result = subprocess.run(['docker','run','--rm','-v',f'{fake_socket}:/var/run/docker.sock:ro',
         '-v',f'{data}:/data',image],capture_output=True,text=True,timeout=15)

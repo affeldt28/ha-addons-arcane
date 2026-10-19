@@ -16,7 +16,7 @@ COPY rootfs /
 RUN chmod 0755 /usr/local/bin/run-monitor
 
 ARG BUILD_ARCH
-ARG BUILD_VERSION=2.16.1-1
+ARG BUILD_VERSION=2.16.1-2
 ARG BUILD_NAME="Arcane Edge Agent (Monitor Only)"
 ARG BUILD_DESCRIPTION="Arcane Edge agent with filtered Docker monitoring access"
 ARG BUILD_DATE
