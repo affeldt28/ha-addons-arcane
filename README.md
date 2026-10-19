@@ -1,28 +1,39 @@
-# Arcane Monitoring for Home Assistant
+# Arcane Community Add-ons for Home Assistant
 
-Community add-ons for running an Arcane Edge Agent on Home Assistant OS with **monitoring-only Docker access**. Requires Supervisor and an existing Arcane Manager. Independent of Home Assistant and Arcane; experimental until validated on a real HA OS system.
+Two independently installable Edge agents for Home Assistant OS / Supervisor, connecting to an existing Arcane Manager. Choose the access level you need. These are independent community packages and remain experimental until tested on Home Assistant OS.
 
-The repository contains two add-ons:
+| Add-on | Docker access | Use it for |
+| --- | --- | --- |
+| **Arcane Edge Agent (Monitor Only)** | Built-in proxy permits selected inspection requests; Arcane runs as a separate unprivileged user | Container lists, logs, statistics, image/network/volume metadata |
+| **Arcane Edge Agent (Full Access — WARNING)** | Direct, unrestricted Docker socket | Deployments, updates, start/stop/restart, deletion, terminal sessions, images, networks and volumes |
 
-- **Arcane Read-only Docker Proxy** is the only component with the real Docker socket. It forwards an explicit list of GET inspection endpoints and HEAD health checks. All other requests are denied.
-- **Arcane Edge Agent (Monitoring)** connects outbound to your Manager and uses the proxy. It has no Docker socket, Supervisor API permission, host directory mounts, or exposed host ports. Leave its Protection mode enabled.
+> **WARNING — Full Access grants the connected Arcane Manager control over the Docker host, including Home Assistant and Supervisor containers. Operations can break Home Assistant or delete data. Only connect it to a trusted Manager.**
 
-The proxy allows container listing, inspection, logs, statistics and processes; image, network and volume metadata; Docker information, events and disk usage. It denies creation, updates, restarts, deletion, pruning, exec, attach, archive/file downloads, image exports, builds and Swarm administration. Arcane may still display action buttons, but Docker-changing actions fail.
+Each add-on includes everything it needs. There is no separate proxy add-on and no repository-specific hostname setup. Both connect outbound and publish no host ports. Each requires Protection mode off because Home Assistant controls Docker socket mounts at the add-on level. Monitor Only runs its internal proxy as root but drops Arcane to UID/GID 65532 and refuses to start if that user can access the real socket. Only the loopback proxy is available to Arcane for Docker requests.
 
-## Publish
+## Install
 
-1. Choose a stable public Git repository URL.
-2. Run `python3 tools/configure_repository.py https://github.com/YOUR_ACCOUNT/ha-addons-arcane` with the actual URL you will add to Home Assistant. This sets metadata, proxy hostname and the agent-only client allowlist. Run this before installing, since the repository URL determines Home Assistant's add-on IDs.
-3. Commit and push this directory to that repository. The proxy builds on the Home Assistant device; the agent uses Arcane's official image. No personal container registry is required.
-4. Add the same URL under Home Assistant **Settings → Apps → Install app → ⋮ → Repositories** (older versions: **Settings → Add-ons → Add-on Store**).
-5. Follow [setup instructions](arcane_edge_agent/DOCS.md).
+1. Publish this directory as a public Git repository. Optionally run `python3 tools/configure_repository.py https://github.com/YOUR_ACCOUNT/ha-addons-arcane` to set the repository homepage. No registry publishing is required: Home Assistant builds Monitor Only on the device, while Full Access uses Arcane's official image.
+2. Add the public Git URL under **Settings → Apps → Install app → ⋮ → Repositories** (older Home Assistant: **Settings → Add-ons → Add-on Store**).
+3. Install the chosen add-on. In Arcane Manager, create an **Edge** environment and copy its generated Manager URL and agent token into the add-on's Configuration tab.
+4. Read that add-on's documentation, disable Protection mode and start it. Start on boot is off by default; enable it after confirming the connection.
 
-Until step 2, the proxy allows only localhost and the agent has an intentionally nonfunctional proxy hostname. Installation therefore fails closed.
+[Monitor Only setup](arcane_edge_agent/DOCS.md) · [Full Access setup and warning](arcane_edge_agent_full/DOCS.md)
 
-## Validation and maintenance
+To run both, create a different Arcane environment and token for each. A monitor-only environment does not restrict an independently installed Full Access agent.
 
-Run `python3 tools/check_policy.py` for configuration and access-policy checks. With Docker running, run `python3 tools/test_proxy.py` to exercise the actual proxy against a fake Docker socket; it never connects to the real Docker daemon socket. GitHub Actions runs both checks. Live Arcane pairing and Home Assistant installation still need a test device.
+## Limits
 
-Keep Manager and agent versions compatible. Update add-ons through Home Assistant, not Arcane. A new upstream agent tag requires updating the agent version; proxy updates require updating the Dockerfile tag and incrementing its add-on version.
+Full Access has no Docker API method restrictions. Container filesystem, devices, Swarm networking and host bind mounts still depend on the host and Docker configuration. Add-on paths are not necessarily Docker-host paths. Use Home Assistant to manage Supervisor-owned containers and to update these add-ons; replacing the agent through Arcane can conflict with Supervisor. Neither package contains an Arcane Manager web UI.
 
-[Arcane proxy documentation](https://getarcane.app/docs/security/socket-proxy) · [Home Assistant repository documentation](https://contributors.home-assistant.io/apps/guides/repository/)
+Monitor Only blocks writes, terminal/exec/attach, container archives and image exports. Arcane can still show action buttons; blocked actions return errors. Metadata and logs may contain secrets. Filtering Docker requests does not make Arcane's own settings/state read-only.
+
+## Development and validation
+
+- `python3 tools/check_policy.py`: check the two add-on definitions and monitoring allowlist.
+- `python3 tools/test_proxy.py`: build Monitor Only and test the actual proxy against a fake Docker socket. Includes denial checks for the unprivileged agent user. Requires Docker; never mounts the real host socket.
+- CI runs these checks. Live HA OS installation, Arcane pairing, persistence and backup/restore still require testing on a device.
+
+The Monitor Only package version is `2.16.1-1` (Arcane v2.16.1, packaging revision 1); Full Access pulls official `v2.16.1`. Monitor's proxy is pinned to 1.13.1. Update the agent/proxy pins and changelogs when releasing a new version.
+
+[Arcane Edge documentation](https://getarcane.app/docs/remote/environments) · [Arcane socket proxy documentation](https://getarcane.app/docs/security/socket-proxy) · [Home Assistant app configuration](https://contributors.home-assistant.io/apps/reference/configuration/)

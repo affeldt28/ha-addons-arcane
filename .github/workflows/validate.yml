@@ -1,4 +1,4 @@
-name: Validate monitoring policy
+name: Validate Arcane add-ons
 on:
   push:
   pull_request:
@@ -12,5 +12,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: sh -n arcane_edge_agent/run.sh
       - run: python3 tools/check_policy.py
       - run: python3 tools/test_proxy.py

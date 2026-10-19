@@ -1,29 +1,28 @@
-# Setup
+# Monitor Only setup
 
-1. Publish and add this repository as described in the repository README. The maintainer must configure the repository URL first.
-2. Install both **Arcane Read-only Docker Proxy** and **Arcane Edge Agent (Monitoring)**.
-3. Disable Protection mode **only for the proxy**, because Home Assistant requires that for Docker socket access. Keep Protection mode enabled for the agent. Start the proxy first.
-4. In an existing Arcane Manager, open **Environments → Add Environment → Edge** and generate the agent configuration.
-5. In the agent's Configuration tab, enter the generated `MANAGER_API_URL` and `AGENT_TOKEN`. Leave the preconfigured `DOCKER_HOST` pointing to the proxy. Use HTTPS for a remote Manager. Keep `EDGE_TRANSPORT: poll` unless your Manager requires another transport.
-6. Start the agent. Confirm the environment connects in Arcane. In polling mode, Standby is healthy; Online means an active tunnel.
+1. Install this add-on. No companion proxy is needed.
+2. In your separate Arcane Manager, create an Edge environment and generate its agent configuration.
+3. Set `MANAGER_API_URL`, `AGENT_TOKEN` and `EDGE_TRANSPORT` in the Configuration tab. Poll is the default; auto, websocket and grpc are also available. Use HTTPS over untrusted networks.
+4. Disable Protection mode, then start the add-on. Home Assistant requires this to mount Docker's socket, even though the Arcane process uses a filter.
+5. Confirm the environment connects. In polling mode, Standby is healthy; Online indicates an active tunnel. Enable Start on boot after testing.
 
-The hostname allowlist on the proxy limits access to this agent. If you install from a different URL or branch, re-run the repository configuration tool with that exact URL (including `#branch` if used). Do not use a broad client IP allowlist or expose port 2375.
+## Access boundary
 
-## What read-only means
+The built-in proxy alone runs as root and opens the real Docker socket. Arcane runs as UID/GID 65532 with no supplementary groups and receives a clean environment pointing Docker at `127.0.0.1:2375`. Startup refuses to continue if that user has write permission on the real socket, as Unix socket connections require write permission. The proxy accepts only loopback clients and an explicit GET/HEAD allowlist, and cannot be reconfigured through add-on options. No proxy port is exposed to other containers or the host.
 
-Docker-changing requests are blocked at the proxy. Monitoring includes container metadata, logs, stats, process lists, image metadata, volumes and networks. Deploying, updating, restarting, stopping, deleting, pruning and terminal sessions cannot work. File/archive downloads and image exports are blocked too. Swarm views and features that need other endpoints may show errors. Arcane can still save its own settings and state; this is read-only access to Docker, not an immutable agent filesystem.
+This permits container lists, inspect, logs, stats, top; image/network/volume metadata; Docker info, events and disk usage. Write methods, exec/attach, file archives, image exports, builds, pruning and Swarm administration are blocked. Unsupported Arcane screens may display errors; do not broaden the policy simply to remove those errors.
 
-Inspection and logs can contain passwords, environment variables and other sensitive data. Only connect to a trusted Arcane Manager. The proxy itself has real Docker socket access; its protection relies on its process and fixed allowlist. It runs separately so the agent cannot bypass the filter by opening the socket directly.
+The add-on still contains a privileged proxy process. A compromise of that process would have real Docker access. Metadata and logs can expose secrets. Install Full Access only if you want a separate environment with unrestricted control.
 
-## State, backups and updates
+## Persistence and updates
 
-Agent state lives in persistent private add-on storage at `/app/data`. Home Assistant cold backups stop the agent briefly and include this state. Options and backups contain your token. Update and restart the agent through Home Assistant; Arcane self-upgrade is blocked.
+State is stored under `/data/arcane`, linked to `/app/data`, and included in cold add-on backups. Backups stop the add-on briefly and contain state and credentials. Restart after changing options. Use Home Assistant for updates.
+
+If you used the earlier unreleased two-container prototype, back up first: its data lived directly under `/app/data` and is not automatically migrated into this layout. Remove the obsolete standalone proxy; this version no longer uses it.
 
 ## Troubleshooting
 
-- Permission denied: check Protection mode is off for the proxy only, and restart it.
-- Connection refused or forbidden: start the proxy first and verify `DOCKER_HOST` and `SP_ALLOWFROM` match the installed add-on hostnames. The publication tool sets these from the repository URL.
-- Pairing errors: check token, Manager URL, TLS and outbound connectivity. Try polling if the reverse proxy cannot handle a persistent tunnel.
-- Action buttons return errors: expected for monitoring-only mode. Missing monitoring data may indicate an endpoint outside the allowlist; report the path for review rather than allowing all requests.
-
-Restart an add-on after changing its configuration.
+- Missing socket: disable Protection mode and restart.
+- Socket accessible to the agent user: startup deliberately refuses to run. Correct host socket ownership/permissions through the host administrator; this add-on never changes them.
+- Pairing issues: check token, URL, certificates and outbound connectivity; try poll if tunnel transport fails.
+- Forbidden Docker actions: expected for monitoring-only mode. Report missing monitoring endpoints for review.

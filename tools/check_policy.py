@@ -1,18 +1,23 @@
-"""Check access boundaries and the endpoint policy, including bypass cases."""
+"""Validate the two access modes and the monitoring endpoint boundary."""
 import json
 import re
 from pathlib import Path
 root = Path(__file__).resolve().parents[1]
-proxy = json.loads((root/'arcane_docker_proxy/config.json').read_text())
-agent = json.loads((root/'arcane_edge_agent/config.json').read_text())
-env = proxy['environment']
-assert proxy['docker_api'] is True
-assert not agent.get('docker_api') and not agent.get('hassio_api')
-assert not agent.get('host_network') and not proxy.get('host_network')
-assert not proxy.get('ports') and not agent.get('ports')
-assert all(m['type'] == 'data' for m in agent['map'])
-assert {k for k in env if k.startswith('SP_ALLOW_')} == {'SP_ALLOW_GET', 'SP_ALLOW_HEAD'}
-assert set(proxy['options']) == {'SP_ALLOWFROM'}
+monitor = json.loads((root/'arcane_edge_agent/config.json').read_text())
+full = json.loads((root/'arcane_edge_agent_full/config.json').read_text())
+policy = json.loads((root/'arcane_edge_agent/policy.json').read_text())
+assert set(p.parent.name for p in root.glob('*/config.json')) == {'arcane_edge_agent','arcane_edge_agent_full'}
+assert monitor['docker_api'] and full['docker_api']
+assert set(policy) == {'GET','HEAD'}
+assert 'image' not in monitor and 'DOCKER_HOST' not in monitor['options']
+assert full['image'] == 'ghcr.io/getarcaneapp/agent'
+assert full['environment']['DOCKER_HOST'] == 'unix:///var/run/docker.sock'
+assert 'WARNING' in full['name'] and 'WARNING' in full['description']
+for cfg in [monitor,full]:
+    assert not cfg.get('ports') and not cfg.get('host_network')
+    assert not cfg.get('hassio_api') and not cfg.get('full_access')
+    assert cfg['boot'] == 'manual'
+    assert set(cfg['options']) == set(cfg['schema']) == {'MANAGER_API_URL','AGENT_TOKEN','EDGE_TRANSPORT'}
 CASES = [
  ('GET','/_ping',True), ('HEAD','/v1.51/_ping',True),
  ('GET','/containers/json',True), ('GET','/v1.51/containers/abc/stats',True),
@@ -26,9 +31,11 @@ CASES = [
  ('GET','/containers/../archive',False), ('GET','//containers/json',False),
  ('GET','/containers%2fabc%2farchive',False), ('CONNECT','/containers/json',False),
  ('POST','/volumes/prune',False), ('GET','/containers/json/extra',False),
+ ('POST','/v1.51/containers/abc/stop',False), ('PATCH','/containers/abc',False),
+ ('GET','/v1.51/images/abc/get',False), ('HEAD','/containers/abc/json',False),
 ]
 for method,path,expected in CASES:
-    actual = bool(re.fullmatch(env.get('SP_ALLOW_'+method, r'(?!)'), path))
+    actual = bool(re.fullmatch(policy.get(method, r'(?!)'),path))
     assert actual == expected, (method,path,actual,expected)
 if __name__ == '__main__':
-    print(f'Configuration boundaries and {len(CASES)} access-policy cases passed.')
+    print(f'Two add-on definitions and {len(CASES)} monitoring access-policy cases passed.')

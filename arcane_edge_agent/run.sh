@@ -1,0 +1,56 @@
+#!/bin/sh
+set -eu
+
+fail() { echo "ERROR: $*" >&2; exit 1; }
+options=/data/options.json
+jq -e '(.MANAGER_API_URL | type == "string" and test("^https?://[^/ ]+")) and
+       (.AGENT_TOKEN | type == "string" and length > 0) and
+       (.EDGE_TRANSPORT == "poll" or .EDGE_TRANSPORT == "auto" or
+        .EDGE_TRANSPORT == "websocket" or .EDGE_TRANSPORT == "grpc")' \
+    "$options" >/dev/null || fail "Configure the Manager URL, token and Edge transport."
+[ -S /var/run/docker.sock ] || fail "Docker socket missing. Disable Protection mode for this add-on."
+# Never chmod/chown the host socket. Fail closed if the agent user could bypass the proxy.
+su-exec 65532:65532 sh -c 'test ! -w /var/run/docker.sock' || \
+    fail "The Docker socket is accessible to the agent user; refusing to run."
+mkdir -p /data/arcane
+chmod 0711 /data
+chown -R 65532:65532 /data/arcane
+chmod 0700 /data/arcane
+get_rule=$(jq -er .GET /etc/arcane-monitor/policy.json)
+head_rule=$(jq -er .HEAD /etc/arcane-monitor/policy.json)
+proxy_pid=
+agent_pid=
+cleanup() {
+    trap - EXIT INT TERM
+    [ -z "$agent_pid" ] || kill "$agent_pid" 2>/dev/null || true
+    [ -z "$proxy_pid" ] || kill "$proxy_pid" 2>/dev/null || true
+    [ -z "$agent_pid" ] || wait "$agent_pid" 2>/dev/null || true
+    [ -z "$proxy_pid" ] || wait "$proxy_pid" 2>/dev/null || true
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM
+# A clean environment and fixed flags prevent options from broadening the policy.
+env -i PATH=/usr/local/bin:/usr/bin:/bin /usr/local/bin/socket-proxy \
+    -listenip=127.0.0.1 -allowfrom=127.0.0.1/32 \
+    "-allowGET=$get_rule" "-allowHEAD=$head_rule" &
+proxy_pid=$!
+ready=false
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    kill -0 "$proxy_pid" 2>/dev/null || fail "Docker proxy exited."
+    if wget -q -O /dev/null http://127.0.0.1:2375/_ping; then ready=true; break; fi
+    sleep 1
+done
+[ "$ready" = true ] || fail "Docker proxy did not become ready."
+echo "Starting Arcane in monitor-only mode. Docker changes are blocked."
+env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/data/arcane \
+    TZ="${TZ:-UTC}" ENVIRONMENT=production GIN_MODE=release ARCANE_IN_CONTAINER=true \
+    AGENT_MODE=true EDGE_AGENT=true LISTEN=127.0.0.1 PORT=3553 \
+    DOCKER_HOST=tcp://127.0.0.1:2375 \
+    MANAGER_API_URL="$(jq -r .MANAGER_API_URL "$options")" \
+    AGENT_TOKEN="$(jq -r .AGENT_TOKEN "$options")" \
+    EDGE_TRANSPORT="$(jq -r .EDGE_TRANSPORT "$options")" \
+    su-exec 65532:65532 /app/arcane-agent &
+agent_pid=$!
+# Terminate the whole add-on if either component fails; never fall back to the real socket.
+while kill -0 "$agent_pid" 2>/dev/null && kill -0 "$proxy_pid" 2>/dev/null; do sleep 1; done
+fail "An agent or proxy process exited; stopping the add-on."

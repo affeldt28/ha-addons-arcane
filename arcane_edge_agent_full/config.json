@@ -1,0 +1,42 @@
+{
+  "arch": [
+    "amd64",
+    "aarch64"
+  ],
+  "startup": "services",
+  "boot": "manual",
+  "stage": "experimental",
+  "init": true,
+  "name": "Arcane Edge Agent (Full Access \u2014 WARNING)",
+  "version": "v2.16.1",
+  "slug": "arcane_edge_agent_full",
+  "description": "WARNING: unrestricted Docker control can change or delete Home Assistant containers.",
+  "backup": "cold",
+  "options": {
+    "MANAGER_API_URL": "",
+    "AGENT_TOKEN": "",
+    "EDGE_TRANSPORT": "poll"
+  },
+  "schema": {
+    "MANAGER_API_URL": "url",
+    "AGENT_TOKEN": "password",
+    "EDGE_TRANSPORT": "list(poll|auto|websocket|grpc)"
+  },
+  "docker_api": true,
+  "image": "ghcr.io/getarcaneapp/agent",
+  "legacy": true,
+  "environment": {
+    "EDGE_AGENT": "true",
+    "AGENT_MODE": "true",
+    "ENVIRONMENT": "production",
+    "DOCKER_HOST": "unix:///var/run/docker.sock",
+    "PUID": "0",
+    "PGID": "0"
+  },
+  "map": [
+    {
+      "type": "data",
+      "path": "/app/data"
+    }
+  ]
+}

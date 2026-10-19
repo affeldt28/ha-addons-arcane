@@ -1,3 +1,3 @@
-# Arcane Edge Agent (Monitoring)
+# Arcane Edge Agent (Monitor Only)
 
-Outbound Edge agent using the separate read-only Docker proxy. See [setup](DOCS.md).
+A standalone monitoring agent with a built-in read-only Docker API proxy. Lists containers, logs and statistics; blocks container changes and terminal sessions. [Setup and access details](DOCS.md).
