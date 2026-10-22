@@ -11,7 +11,7 @@ assert monitor['docker_api'] and full['docker_api']
 assert set(policy) == {'GET','HEAD'}
 assert 'image' not in monitor and 'DOCKER_HOST' not in monitor['options']
 assert full['image'] == 'ghcr.io/getarcaneapp/agent'
-assert full['environment']['DOCKER_HOST'] == 'unix:///var/run/docker.sock'
+assert full['environment']['DOCKER_HOST'] == 'unix:///run/docker.sock'
 assert 'Full Access' in full['name'] and 'WARNING' in full['description']
 for cfg in [monitor,full]:
     assert not cfg.get('ports') and not cfg.get('host_network')

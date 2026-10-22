@@ -9,7 +9,7 @@
 
 ## Features and host limits
 
-This package runs the unmodified official Arcane agent as root with `DOCKER_HOST=unix:///var/run/docker.sock`. There is no method/path proxy. Container deployment, start/stop/restart, deletion, exec/terminal, image management, networks and volumes are available through the agent, subject to your Arcane user permissions and Docker host capabilities.
+This package runs the unmodified official Arcane agent as root with `DOCKER_HOST=unix:///run/docker.sock`. There is no method/path proxy. Container deployment, start/stop/restart, deletion, exec/terminal, image management, networks and volumes are available through the agent, subject to your Arcane user permissions and Docker host capabilities.
 
 Host filesystem browsing, arbitrary Compose bind mounts, hardware access, GPU support and Swarm networking depend on the host configuration. This package does not mount the host root or Docker volume directory into the agent. Docker resolves bind source paths on the host, not relative to the agent container. Direct Docker access can itself create containers with additional host mounts or privileges.
 
@@ -21,4 +21,4 @@ This is an Edge agent, not the Arcane Manager web application.
 
 Private add-on data is mounted at `/app/data` and included in cold backups. Protect backups and options because they contain credentials. Restart after option changes.
 
-For Docker permission errors, verify Protection mode is off. For pairing failures, check Manager URL, token, TLS and outbound connectivity. Polling Standby is healthy.
+For Docker permission errors, verify Protection mode is off. Supervisor mounts the Docker socket at `/run/docker.sock`; the agent must use `DOCKER_HOST=unix:///run/docker.sock`. A `no such file or directory` error mentioning `/var/run/docker.sock` indicates the old configuration. After installing the corrected package, stop and start the add-on so Supervisor recreates its container with the updated environment. For pairing failures, check Manager URL, token, TLS and outbound connectivity. Polling Standby is healthy.
