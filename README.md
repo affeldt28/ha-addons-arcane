@@ -24,8 +24,8 @@ Independent community packages for Arcane. These add-ons are experimental; repor
 | Deploy, start, stop, restart and delete | Blocked | Available |
 | Container terminals | Blocked | Available |
 | Docker connection | Built-in read-only proxy | Direct Docker socket |
-| Setup | [Monitor documentation](arcane_edge_agent/DOCS.md) | [Full Access documentation](arcane_edge_agent_full/DOCS.md) |
-| What's new | [Monitor changelog](arcane_edge_agent/CHANGELOG.md) | [Full Access changelog](arcane_edge_agent_full/CHANGELOG.md) |
+| Setup | [Monitor - documentation](arcane_edge_agent/DOCS.md) | [Full Access - documentation](arcane_edge_agent_full/DOCS.md) |
+| What's new | [Monitor - changelog](arcane_edge_agent/CHANGELOG.md) | [Full Access - changelog](arcane_edge_agent_full/CHANGELOG.md) |
 
 > **Full Access warning:** the connected Arcane Manager can control the host's Docker resources, including containers used by Home Assistant and Supervisor. Changes can interrupt Home Assistant or delete data. Connect only to a trusted Manager.
 
@@ -77,7 +77,7 @@ Use HTTPS for remote connections. Available transports are `poll`, `auto`, `webs
 
 Home Assistant checks the repository for newer add-on versions. After a release is pushed, use **Add-on Store → ⋮ → Check for updates**, then update the installed add-on. Enable automatic updates in Home Assistant if desired; releases marked as breaking changes require manual attention.
 
-A GitHub commit alone does not create an update: maintainers must increase the add-on's version. Monitor is built on your device; Full Access pulls the official Arcane image at its configured version. GitHub Releases are not required.
+A GitHub commit alone does not create an update: maintainers must increase the add-on's version. Both packages build on your device using pinned upstream Arcane images. Package versions are independent: packaging fixes increment the suffix (for example `2.16.1-1` → `2.16.1-2`) without changing the pinned Arcane version. GitHub Releases are not required.
 
 Use Home Assistant to update these add-ons and manage Supervisor-owned containers. Arcane self-updates or automatic pruning of those resources can conflict with Supervisor.
 
@@ -92,6 +92,6 @@ When reporting a problem, include the add-on version, architecture, Home Assista
 
 ## Credits
 
-Built around the official [Arcane](https://github.com/getarcaneapp/arcane) agent and [wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy). Packaging takes inspiration from [Advanced SSH & Web Terminal](https://github.com/hassio-addons/app-ssh/tree/v24.1.7).
+Built around the official [Arcane](https://github.com/getarcaneapp/arcane) agent and [wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy).
 
 This repository is not an official Home Assistant or Arcane project. Arcane artwork is reused with [upstream license and attribution](branding/README.md).

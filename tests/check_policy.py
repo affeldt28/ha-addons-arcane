@@ -1,19 +1,22 @@
 """Validate the two access modes and the monitoring endpoint boundary."""
 import json
 import re
+import yaml
 from pathlib import Path
 root = Path(__file__).resolve().parents[1]
-monitor = json.loads((root/'arcane_edge_agent/config.json').read_text())
-full = json.loads((root/'arcane_edge_agent_full/config.json').read_text())
+monitor = yaml.safe_load((root/'arcane_edge_agent/config.yaml').read_text())
+full = yaml.safe_load((root/'arcane_edge_agent_full/config.yaml').read_text())
 policy = json.loads((root/'arcane_edge_agent/rootfs/etc/arcane-monitor/policy.json').read_text())
-assert set(p.parent.name for p in root.glob('*/config.json')) == {'arcane_edge_agent','arcane_edge_agent_full'}
+assert set(p.parent.name for p in root.glob('*/config.yaml')) == {'arcane_edge_agent','arcane_edge_agent_full'}
 assert monitor['docker_api'] and full['docker_api']
 assert set(policy) == {'GET','HEAD'}
 assert 'image' not in monitor and 'DOCKER_HOST' not in monitor['options']
-assert full['image'] == 'ghcr.io/getarcaneapp/agent'
+assert 'image' not in full
+assert 'FROM ghcr.io/getarcaneapp/agent:v2.16.1' in (root/'arcane_edge_agent_full/Dockerfile').read_text()
 assert full['environment']['DOCKER_HOST'] == 'unix:///run/docker.sock'
 assert 'Full Access' in full['name'] and 'WARNING' in full['description']
 for cfg in [monitor,full]:
+    assert cfg['map'] == [{'type': 'addon_config', 'read_only': False}]
     assert not cfg.get('ports') and not cfg.get('host_network')
     assert not cfg.get('hassio_api') and not cfg.get('full_access')
     assert cfg['boot'] == 'manual'

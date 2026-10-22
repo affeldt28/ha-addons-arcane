@@ -6,7 +6,7 @@ FROM ${BUILD_FROM}
 
 RUN apk add --no-cache ca-certificates jq su-exec tzdata \
     && mkdir -p /app /etc/arcane-monitor \
-    && ln -s /data/arcane /app/data
+    && ln -s /config/arcane /app/data
 
 COPY --from=agent /app/arcane-agent /app/arcane-agent
 COPY --from=proxy /socket-proxy /usr/local/bin/socket-proxy
@@ -16,7 +16,7 @@ COPY rootfs /
 RUN chmod 0755 /usr/local/bin/run-monitor
 
 ARG BUILD_ARCH
-ARG BUILD_VERSION=2.16.1-2
+ARG BUILD_VERSION=2.16.1-3
 ARG BUILD_NAME="Arcane Agent (Monitor)"
 ARG BUILD_DESCRIPTION="Arcane Edge agent with filtered Docker monitoring access"
 ARG BUILD_DATE
@@ -33,6 +33,6 @@ LABEL \
     org.opencontainers.image.revision="${BUILD_REF}" \
     org.opencontainers.image.version="${BUILD_VERSION}"
 
-# This image uses Docker's init (config.json init: true), rather than S6.
+# This image uses Docker's init (config.yaml init: true), rather than S6.
 WORKDIR /app
 ENTRYPOINT ["/usr/local/bin/run-monitor"]

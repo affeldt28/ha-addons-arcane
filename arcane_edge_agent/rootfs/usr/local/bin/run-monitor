@@ -4,20 +4,38 @@ set -eu
 fail() { echo "ERROR: $*" >&2; exit 1; }
 # Resolve before clearing PATH: Alpine installs su-exec in /sbin.
 su_exec=$(command -v su-exec) || fail "Privilege-drop helper su-exec is missing."
+# Use saved pairing settings after reinstall, when Supervisor supplies blank defaults.
+umask 077
+mkdir -p /config
 options=/data/options.json
+if jq -e '.MANAGER_API_URL == "" and .AGENT_TOKEN == ""' "$options" >/dev/null \
+    && [ -f /config/options.json ]; then
+    options=/config/options.json
+fi
 jq -e '(.MANAGER_API_URL | type == "string" and test("^https?://[^/ ]+")) and
        (.AGENT_TOKEN | type == "string" and length > 0) and
        (.EDGE_TRANSPORT == "poll" or .EDGE_TRANSPORT == "auto" or
         .EDGE_TRANSPORT == "websocket" or .EDGE_TRANSPORT == "grpc")' \
     "$options" >/dev/null || fail "Configure the Manager URL, token and Edge transport."
+if [ "$options" != /config/options.json ]; then
+    cp "$options" /config/options.json.tmp
+    mv /config/options.json.tmp /config/options.json
+fi
 [ -S /var/run/docker.sock ] || fail "Docker socket missing. Disable Protection mode for this add-on."
 # Never chmod/chown the host socket. Fail closed if the agent user could bypass the proxy.
 "$su_exec" 65532:65532 sh -c 'test ! -w /var/run/docker.sock' || \
     fail "The Docker socket is accessible to the agent user; refusing to run."
-mkdir -p /data/arcane
-chmod 0711 /data
-chown -R 65532:65532 /data/arcane
-chmod 0700 /data/arcane
+# Copy old state once, publishing only a complete copy; never overwrite retained state.
+if [ ! -d /config/arcane ]; then
+    mkdir -p /config/arcane-migration
+    if [ -d /data/arcane ]; then
+        cp -a /data/arcane/. /config/arcane-migration/
+    fi
+    mv /config/arcane-migration /config/arcane
+fi
+chmod 0711 /config
+chown -R 65532:65532 /config/arcane
+chmod 0700 /config/arcane
 get_rule=$(jq -er .GET /etc/arcane-monitor/policy.json)
 head_rule=$(jq -er .HEAD /etc/arcane-monitor/policy.json)
 proxy_pid=
@@ -46,7 +64,7 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
 done
 [ "$ready" = true ] || fail "Docker proxy did not become ready."
 echo "Starting Arcane in monitor-only mode. Docker changes are blocked."
-env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/data/arcane \
+env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/config/arcane \
     TZ="${TZ:-UTC}" ENVIRONMENT=production GIN_MODE=release ARCANE_IN_CONTAINER=true \
     AGENT_MODE=true EDGE_AGENT=true LISTEN=127.0.0.1 PORT=3553 \
     DOCKER_HOST=tcp://127.0.0.1:2375 \

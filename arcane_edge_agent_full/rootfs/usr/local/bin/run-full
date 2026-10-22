@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+fail() { echo "ERROR: $*" >&2; exit 1; }
+# Use saved pairing settings after reinstall, when Supervisor supplies blank defaults.
+umask 077
+mkdir -p /config
+options=/data/options.json
+if jq -e '.MANAGER_API_URL == "" and .AGENT_TOKEN == ""' "$options" >/dev/null \
+    && [ -f /config/options.json ]; then
+    options=/config/options.json
+fi
+jq -e '(.MANAGER_API_URL | type == "string" and test("^https?://[^/ ]+")) and
+       (.AGENT_TOKEN | type == "string" and length > 0) and
+       (.EDGE_TRANSPORT == "poll" or .EDGE_TRANSPORT == "auto" or
+        .EDGE_TRANSPORT == "websocket" or .EDGE_TRANSPORT == "grpc")' \
+    "$options" >/dev/null || fail "Configure the Manager URL, token and Edge transport."
+if [ "$options" != /config/options.json ]; then
+    cp "$options" /config/options.json.tmp
+    mv /config/options.json.tmp /config/options.json
+fi
+[ -S /run/docker.sock ] || fail "Docker socket missing. Disable Protection mode for this add-on."
+# Copy old state once, publishing only a complete copy; never overwrite retained state.
+if [ ! -d /config/arcane ]; then
+    mkdir -p /config/arcane-migration
+    if [ -d /data ]; then
+        cp -a /data/. /config/arcane-migration/
+    fi
+    mv /config/arcane-migration /config/arcane
+fi
+chmod 0700 /config/arcane
+export MANAGER_API_URL="$(jq -r .MANAGER_API_URL "$options")"
+export AGENT_TOKEN="$(jq -r .AGENT_TOKEN "$options")"
+export EDGE_TRANSPORT="$(jq -r .EDGE_TRANSPORT "$options")"
+exec /app/arcane-agent

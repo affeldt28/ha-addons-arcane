@@ -13,16 +13,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: pip install -r tests/requirements.txt
       - run: sh -n arcane_edge_agent/rootfs/usr/local/bin/run-monitor
-      - name: Lint monitor startup
-        run: shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor
-      - run: python3 tools/check_policy.py
-      - name: Test registry retry behavior
-        run: python3 -m unittest discover -s tools -p test_build_image.py
+      - run: sh -n arcane_edge_agent_full/rootfs/usr/local/bin/run-full
+      - name: Lint agent startup
+        run: shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor arcane_edge_agent_full/rootfs/usr/local/bin/run-full
+      - run: python3 tests/check_policy.py
+      - name: Test storage migration and registry retries
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
       - name: Authenticate to GitHub Container Registry
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: python3 tools/test_proxy.py
+      - run: python3 tests/integration.py

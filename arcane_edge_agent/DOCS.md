@@ -16,7 +16,13 @@ The add-on still contains a privileged proxy process. A compromise of that proce
 
 ## Persistence and updates
 
-State is stored under `/data/arcane`, linked to `/app/data`, and included in cold add-on backups. Backups stop the add-on briefly and contain state and credentials. Restart after changing options. Use Home Assistant for updates.
+State is stored in `/config/arcane` inside the container, linked to `/app/data`. Pairing settings are saved in `/config/options.json` with owner-only permissions. Supervisor exposes this public folder under `/addon_configs/<repository>_<slug>` (some newer tools call it `/app_configs`). It is included in cold add-on backups.
+
+On first start after updating, existing private state is copied automatically; retained public state is never overwritten. **Update and start the add-on before uninstalling** so migration can run. When uninstalling, leave the option to remove the public configuration folder unchecked. Reinstall from the same repository with the same slug to reuse the folder. Deleting that folder also deletes the retained state.
+
+After reinstall, leave Manager URL and token blank to reuse saved pairing settings, including transport. To replace them, enter both fields in the Configuration tab; valid settings are saved at startup. Home Assistant's Configuration form itself is not restored from this file. Backups and the public folder contain credentials; protect them accordingly. Restart after changing options.
+
+Storage follows [Home Assistant's public configuration folder guidance](https://contributors.home-assistant.io/blog/2023/11/06/public-addon-config/) and [configuration file lifecycle](https://contributors.home-assistant.io/apps/guides/options/#configuration-files-for-users).
 
 If you used the earlier unreleased two-container prototype, back up first: its data lived directly under `/app/data` and is not automatically migrated into this layout. Remove the obsolete standalone proxy; this version no longer uses it.
 

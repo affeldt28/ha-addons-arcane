@@ -1,9 +1,10 @@
 # Changelog
 
-## v2.16.1-1
+## 2.16.1-1
 
 - Fix Docker connectivity by using Supervisor's `/run/docker.sock` mount directly instead of relying on `/var/run` being a symlink.
-- Keep the official `v2.16.1` image tag; this configuration-only fix requires recreating the add-on container with the corrected environment.
+- Build the package locally with upstream Arcane pinned to `v2.16.1`, allowing independent package releases.
+- Move agent state and saved pairing settings to the public add-on config folder, with automatic migration from private storage. Keep that folder when uninstalling to reuse it after reinstall.
 
 ## v2.16.1
 

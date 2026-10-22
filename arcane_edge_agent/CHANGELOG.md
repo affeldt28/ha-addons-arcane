@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.16.1-3
+
+- Move agent state and saved pairing settings to the public add-on config folder, migrating existing `/data/arcane` state on first start.
+- Reuse retained pairing settings after reinstall when Configuration contains blank defaults.
+
 ## 2.16.1-2
 
 - Fix agent startup by resolving su-exec before sanitizing the environment and including sbin directories in PATH.

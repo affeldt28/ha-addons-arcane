@@ -32,7 +32,7 @@ You need Home Assistant with Supervisor, an existing Arcane Manager and a suppor
 
 Use Home Assistant to update and manage Supervisor-owned containers and these add-ons. Arcane self-updates, automatic updates or pruning of those resources may conflict with Supervisor. Docker socket access is powerful even without extra host directory mounts.
 
-Agent state is saved in persistent add-on storage and included in Home Assistant add-on backups. Backups and configuration contain credentials; protect them accordingly.
+Agent state and pairing settings are saved in the public add-on config folder and included in Home Assistant add-on backups. Keep the public configuration folder when uninstalling to reuse it after reinstall. Backups and configuration contain credentials; protect them accordingly.
 
 [Setup, options and troubleshooting](https://github.com/affeldt28/ha-addons-arcane/blob/main/arcane_edge_agent_full/DOCS.md) · [Arcane documentation](https://getarcane.app/docs/remote/environments) · [Report an issue](https://github.com/affeldt28/ha-addons-arcane/issues)
 
