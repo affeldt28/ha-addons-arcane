@@ -8,7 +8,7 @@
   "stage": "experimental",
   "init": true,
   "name": "Arcane Agent (Full Access)",
-  "version": "v2.16.2",
+  "version": "v2.16.1",
   "slug": "arcane_edge_agent_full",
   "description": "WARNING: full Docker control.",
   "backup": "cold",
