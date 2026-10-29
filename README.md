@@ -77,7 +77,7 @@ Use HTTPS for remote connections. Available transports are `poll`, `auto`, `webs
 
 Home Assistant checks the repository for newer add-on versions. After a release is pushed, use **Add-on Store → ⋮ → Check for updates**, then update the installed add-on. Enable automatic updates in Home Assistant if desired; releases marked as breaking changes require manual attention.
 
-Renovate updates the pinned Arcane, proxy and Alpine images and bumps both add-on package versions together. Package versions are independent of the upstream Arcane version. Non-major updates merge automatically after CI passes; major updates require review. The pipeline validates both architectures before creating a tag and GitHub Release. Home Assistant then discovers the new package version and builds it on your device.
+Renovate updates the pinned Arcane, proxy and Alpine images and bumps both add-on package versions together. Package versions use `<Arcane version>-<packaging revision>` (for example `2.17.1-1`). Arcane updates reset the revision to `1`; Alpine/proxy and packaging changes increment only that suffix. Non-major updates merge automatically after CI passes; major updates require review. The pipeline validates both architectures before creating a tag and GitHub Release. Home Assistant then discovers the new package version and builds it on your device.
 
 Use Home Assistant to update these add-ons and manage Supervisor-owned containers. Arcane self-updates or automatic pruning of those resources can conflict with Supervisor.
 

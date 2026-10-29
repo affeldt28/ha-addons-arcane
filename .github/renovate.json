@@ -7,7 +7,8 @@
   "enabledManagers": [
     "dockerfile",
     "github-actions",
-    "pip_requirements"
+    "pip_requirements",
+    "custom.regex"
   ],
   "dependencyDashboard": false,
   "branchPrefix": "renovate/",
@@ -19,31 +20,47 @@
   "platformAutomerge": false,
   "packageRules": [
     {
-      "description": "Keep both packages on one release version for every runtime image update.",
+      "description": "Update upstream image and package versions together; reset packaging revision to 1.",
+      "matchPackageNames": [
+        "getarcaneapp/agent"
+      ],
+      "groupName": "upstream app",
+      "groupSlug": "upstream-app",
+      "addLabels": [
+        "docker 🐳"
+      ]
+    },
+    {
+      "description": "Increment only the packaging revision for other runtime image updates.",
       "matchManagers": [
         "dockerfile"
       ],
-      "matchFileNames": [
-        "arcane_edge_agent/Dockerfile",
-        "arcane_edge_agent_full/Dockerfile"
+      "matchPackageNames": [
+        "!getarcaneapp/agent"
       ],
-      "groupName": "add-on runtime images",
-      "groupSlug": "addon-runtime",
+      "groupName": "packaging runtime",
+      "groupSlug": "packaging-runtime",
       "bumpVersions": [
         {
-          "name": "Home Assistant add-on versions",
+          "name": "Packaging revision: arcane_edge_agent/config.yaml",
           "filePatterns": [
-            "arcane_edge_agent/config.yaml",
+            "arcane_edge_agent/config.yaml"
+          ],
+          "matchStrings": [
+            "(?<prefix>version: )(?<version>\\d+\\.\\d+\\.\\d+-\\d+)(?<suffix>\\s)"
+          ],
+          "bumpType": "prerelease"
+        },
+        {
+          "name": "Packaging revision: arcane_edge_agent_full/config.yaml",
+          "filePatterns": [
             "arcane_edge_agent_full/config.yaml"
           ],
           "matchStrings": [
-            "version: (?<version>\\d+\\.\\d+\\.\\d+)"
+            "(?<prefix>version: )(?<version>\\d+\\.\\d+\\.\\d+-\\d+)(?<suffix>\\s)"
           ],
-          "bumpType": "patch"
+          "bumpType": "prerelease"
         }
-      ],
-      "prBodyNotes": [
-        "This PR also bumps the Home Assistant add-on version. After merge, Home Assistant can discover the update when its repository refreshes."
       ],
       "addLabels": [
         "docker 🐳"
@@ -75,5 +92,35 @@
   ],
   "labels": [
     "dependencies 📦"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/arcane_edge_agent/config\\.yaml$/"
+      ],
+      "matchStrings": [
+        "(?<prefix>version: )(?<currentValue>\\d+\\.\\d+\\.\\d+)-\\d+(?<suffix>\\s)"
+      ],
+      "depNameTemplate": "getarcaneapp/agent",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
+      "autoReplaceStringTemplate": "version: {{{newValue}}}-1\n"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/arcane_edge_agent_full/config\\.yaml$/"
+      ],
+      "matchStrings": [
+        "(?<prefix>version: )(?<currentValue>\\d+\\.\\d+\\.\\d+)-\\d+(?<suffix>\\s)"
+      ],
+      "depNameTemplate": "getarcaneapp/agent",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
+      "autoReplaceStringTemplate": "version: {{{newValue}}}-1\n"
+    }
   ]
 }

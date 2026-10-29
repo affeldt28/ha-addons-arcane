@@ -33,9 +33,11 @@ For changes to Docker access, verify both allowed monitoring requests and blocke
 
 ## Publishing an update
 
-Both packages share one semantic release version, independent of the upstream Arcane tag. For a packaging change, increment both `config.yaml` versions and update the add-on changelogs. Supervisor supplies the image labels; no Dockerfile package version is needed.
+Both packages share an `<upstream>-<revision>` version, for example `2.17.1-1`. For packaging changes, increment only the revision in both `config.yaml` files and update the changelogs. Supervisor supplies image labels; no Dockerfile package version is needed.
 
-Renovate groups runtime image updates and bumps both manifests with `bumpVersions`, including proxy-only or Alpine-only updates. Arcane stays pinned to the same upstream version in both Dockerfiles. CI checks that invariant without hardcoding a release, so future Renovate updates can pass. Non-major updates auto-merge after successful checks; major updates require review.
+Renovate groups Arcane image updates and manifest versions in one PR, resetting the revision to `1`. Alpine and proxy updates use a separate PR and increment only the packaging revision in both manifests. The version prefix must match the upstream image; CI checks this invariant. Non-major updates auto-merge after successful checks; major updates require review.
+
+Migration: the previous package version `2.17.2` contained Arcane `2.17.1`. The corrected `2.17.1-1` is lower, so existing installations will not discover it as an upgrade. Do not uninstall merely to change the version number; wait for a later upstream-aligned release that sorts above the installed version.
 
 Enable the Renovate GitHub App for this repository and allow squash merging. Protect `main` with the two validation jobs as required checks. Renovate performs merges itself (`platformAutomerge: false`); no scheduled Renovate workflow or PAT is needed. GitHub Actions needs permission to create tags and releases via `GITHUB_TOKEN`.
 
@@ -50,3 +52,5 @@ Packaging follows selected conventions from [Advanced SSH & Web Terminal v24.1.7
 Preserve the upstream notices under `branding/` when redistributing Arcane artwork. Do not imply endorsement by Home Assistant, Arcane or the reference add-on's maintainers.
 
 Additional references: [Jellyfin packaging and Renovate](https://github.com/hassio-addons/app-jellyfin) and [ESPHome CI](https://github.com/esphome/esphome). The official Arcane runtime remains the Full Access base; Monitor retains only the extra filtering and privilege separation it needs.
+
+The numeric suffix is a packaging revision, not an upstream beta. Renovate uses its `prerelease` increment operation to increment that numeric suffix without changing the upstream version. Upstream version fields are tracked with regex managers and updated alongside the Docker image; base-image updates are kept separate to avoid resetting and incrementing a revision in the same PR. Action-only updates do not change the add-on version.

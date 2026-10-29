@@ -37,8 +37,8 @@ jobs:
         id: version
         run: |
           version=$(sed -n 's/^version: //p' arcane_edge_agent/config.yaml)
-          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            echo '::error::Add-on version must be major.minor.patch.'
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-([1-9][0-9]*)$ ]]; then
+            echo '::error::Add-on version must be upstream.version.patch-revision (for example 2.17.1-1).'
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"

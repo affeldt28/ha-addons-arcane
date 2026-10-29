@@ -17,7 +17,8 @@ upstream = re.search(r'^ARG BUILD_FROM=(getarcaneapp/agent:v\d+\.\d+\.\d+)', ful
 assert upstream, 'Full Access must use a pinned official agent image'
 monitor_dockerfile = (root/'arcane_edge_agent/Dockerfile').read_text()
 assert f'FROM {upstream[1]} AS agent' in monitor_dockerfile, 'Both packages must use the same Arcane version'
-assert re.fullmatch(r'\d+\.\d+\.\d+', monitor['version']), 'Use a release version, not dev'
+assert re.fullmatch(r'\d+\.\d+\.\d+-[1-9]\d*', monitor['version']), 'Use a release version, not dev'
+assert monitor['version'].rsplit('-', 1)[0] == upstream[1].split(':v')[1], 'Package version must track Arcane'
 assert monitor['version'] == full['version'], 'Both packages share one release version'
 assert 'FROM ${BUILD_FROM}' in full_dockerfile
 assert full['legacy'] is True
