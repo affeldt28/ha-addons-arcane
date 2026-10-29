@@ -10,7 +10,7 @@
 		"pip_requirements",
 		"custom.regex"
 	],
-	"dependencyDashboard": false,
+	"dependencyDashboard": true,
 	"branchPrefix": "renovate/",
 	"prConcurrentLimit": 1,
 	"rebaseWhen": "behind-base-branch",
