@@ -13,7 +13,12 @@ assert set(policy) == {'GET','HEAD'}
 assert 'image' not in monitor and 'DOCKER_HOST' not in monitor['options']
 assert 'image' not in full
 full_dockerfile = (root/'arcane_edge_agent_full/Dockerfile').read_text()
-assert 'ARG BUILD_FROM=ghcr.io/getarcaneapp/agent:v2.17.1' in full_dockerfile
+upstream = re.search(r'^ARG BUILD_FROM=(ghcr\.io/getarcaneapp/agent:v\d+\.\d+\.\d+)', full_dockerfile, re.M)
+assert upstream, 'Full Access must use a pinned official agent image'
+monitor_dockerfile = (root/'arcane_edge_agent/Dockerfile').read_text()
+assert f'FROM {upstream[1]} AS agent' in monitor_dockerfile, 'Both packages must use the same Arcane version'
+assert re.fullmatch(r'\d+\.\d+\.\d+', monitor['version']), 'Use a release version, not dev'
+assert monitor['version'] == full['version'], 'Both packages share one release version'
 assert 'FROM ${BUILD_FROM}' in full_dockerfile
 assert full['legacy'] is True
 assert full['environment']['DOCKER_HOST'] == 'unix:///run/docker.sock'

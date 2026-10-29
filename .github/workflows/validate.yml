@@ -1,29 +1,66 @@
-name: Validate Arcane add-ons
+name: ✅ Validate Arcane add-ons
+
 on:
-  push:
-  pull_request:
+  workflow_call:
+
 permissions:
   contents: read
   packages: read
+
 jobs:
-  proxy-policy:
-    runs-on: ubuntu-latest
+  validate:
+    name: 🧪 Validate (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - run: pip install -r tests/requirements.txt
-      - run: sh -n arcane_edge_agent/rootfs/usr/local/bin/run-monitor
-      - name: Lint agent startup
-        run: shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor
-      - run: python3 tests/check_policy.py
-      - name: Test storage migration and registry retries
-        run: python3 -m unittest discover -s tests -p 'test_*.py'
-      - name: Authenticate to GitHub Container Registry
-        uses: docker/login-action@v4
+
+      - name: 📦 Install validation tools
+        run: |
+          pip install -r tests/requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y jq shellcheck
+
+      - name: 🧹 Check startup script
+        run: |
+          sh -n arcane_edge_agent/rootfs/usr/local/bin/run-monitor
+          shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor
+
+      - name: 🧪 Check configuration, storage and registry retries
+        run: |
+          python3 tests/check_policy.py
+          python3 -m unittest discover -s tests -p 'test_*.py'
+
+      - name: 🟢 Set up Node.js
+        if: matrix.arch == 'amd64'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: ✅ Validate Renovate configuration
+        if: matrix.arch == 'amd64'
+        run: npx --yes --package renovate@44 renovate-config-validator --strict .github/renovate.json
+
+      - name: 🔑 Authenticate to GitHub Container Registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: python3 tests/integration.py
+
+      - name: 🏗️ Build and test both access modes
+        run: python3 tests/integration.py

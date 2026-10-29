@@ -1,0 +1,79 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "enabledManagers": [
+    "dockerfile",
+    "github-actions",
+    "pip_requirements"
+  ],
+  "dependencyDashboard": false,
+  "branchPrefix": "renovate/",
+  "prConcurrentLimit": 1,
+  "rebaseWhen": "behind-base-branch",
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "platformAutomerge": false,
+  "packageRules": [
+    {
+      "description": "Keep both packages on one release version for every runtime image update.",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchFileNames": [
+        "arcane_edge_agent/Dockerfile",
+        "arcane_edge_agent_full/Dockerfile"
+      ],
+      "groupName": "add-on runtime images",
+      "groupSlug": "addon-runtime",
+      "bumpVersions": [
+        {
+          "name": "Home Assistant add-on versions",
+          "filePatterns": [
+            "arcane_edge_agent/config.yaml",
+            "arcane_edge_agent_full/config.yaml"
+          ],
+          "matchStrings": [
+            "version: (?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ],
+      "prBodyNotes": [
+        "This PR also bumps the Home Assistant add-on version. After merge, Home Assistant can discover the update when its repository refreshes."
+      ],
+      "addLabels": [
+        "docker 🐳"
+      ]
+    },
+    {
+      "description": "Maintain full version comments and commit pins for GitHub Actions.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchDepTypes": [
+        "action"
+      ],
+      "groupName": "GitHub Actions",
+      "pinDigests": true,
+      "addLabels": [
+        "github-actions :octocat:"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "addLabels": [
+        "breaking 💥"
+      ]
+    }
+  ],
+  "labels": [
+    "dependencies 📦"
+  ]
+}

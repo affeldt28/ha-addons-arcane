@@ -8,7 +8,7 @@ Connect your Home Assistant Docker host to an existing **Arcane Manager**. Choos
 
 [![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Faffeldt28%2Fha-addons-arcane)
 
-[![Validate Arcane add-ons](https://github.com/affeldt28/ha-addons-arcane/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/affeldt28/ha-addons-arcane/actions/workflows/validate.yml)
+[![Validate Arcane add-ons](https://github.com/affeldt28/ha-addons-arcane/actions/workflows/pipeline.yml/badge.svg?branch=main)](https://github.com/affeldt28/ha-addons-arcane/actions/workflows/pipeline.yml)
 ![Stage: experimental](https://img.shields.io/badge/stage-experimental-orange)
 ![Architectures: amd64 and aarch64](https://img.shields.io/badge/architectures-amd64%20%7C%20aarch64-blue)
 [![GitHub stars](https://img.shields.io/github/stars/affeldt28/ha-addons-arcane?style=flat)](https://github.com/affeldt28/ha-addons-arcane/stargazers)
@@ -77,7 +77,7 @@ Use HTTPS for remote connections. Available transports are `poll`, `auto`, `webs
 
 Home Assistant checks the repository for newer add-on versions. After a release is pushed, use **Add-on Store → ⋮ → Check for updates**, then update the installed add-on. Enable automatic updates in Home Assistant if desired; releases marked as breaking changes require manual attention.
 
-A GitHub commit alone does not create an update: maintainers must increase the add-on's version. Both packages build on your device using pinned upstream Arcane images. Package versions are independent: packaging fixes increment the suffix (for example `2.16.1-1` → `2.16.1-2`) without changing the pinned Arcane version. GitHub Releases are not required.
+Renovate updates the pinned Arcane, proxy and Alpine images and bumps both add-on package versions together. Package versions are independent of the upstream Arcane version. Non-major updates merge automatically after CI passes; major updates require review. The pipeline validates both architectures before creating a tag and GitHub Release. Home Assistant then discovers the new package version and builds it on your device.
 
 Use Home Assistant to update these add-ons and manage Supervisor-owned containers. Arcane self-updates or automatic pruning of those resources can conflict with Supervisor.
 

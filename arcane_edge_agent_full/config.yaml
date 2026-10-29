@@ -1,11 +1,12 @@
 ---
 name: Arcane Agent (Full Access)
-version: dev
+version: 2.17.2
 slug: arcane_edge_agent_full
 description: 'WARNING: full Docker control.'
 url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent_full
 docker_api: true
 init: true
+legacy: true
 startup: services
 boot: manual
 stage: experimental

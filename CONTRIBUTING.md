@@ -7,7 +7,8 @@ Issues and pull requests are welcome. For bugs, include the add-on version, CPU 
 - `arcane_edge_agent/`: Monitor's local image build, startup script and fixed Docker API policy.
 - `arcane_edge_agent_full/`: Full Access image inheriting the pinned official Arcane image with only Home Assistant labels.
 - `tests/`: configuration checks, Docker integration tests and their helpers.
-- `.github/workflows/validate.yml`: CI validation.
+- `.github/workflows/pipeline.yml`: reusable validation, tagging and releases.
+- `.github/renovate.json`: image, action and Python dependency updates.
 
 Each add-on has its own README, setup documentation, changelog, translations, icon and logo. Add-on manifests use YAML.
 
@@ -32,16 +33,20 @@ For changes to Docker access, verify both allowed monitoring requests and blocke
 
 ## Publishing an update
 
-1. Update the relevant add-on's configuration version and changelog.
-2. For Monitor, also update the Dockerfile's default `BUILD_VERSION` when changing the package version. Its upstream Arcane and proxy tags are pinned separately.
-3. Full Access is also built locally. Its `Dockerfile` pins the upstream image independently of the package version. For a packaging-only fix, increment the suffix (for example `2.16.1-1` → `2.16.1-2`) in `config.yaml`, leaving the upstream `BUILD_FROM` default unchanged. Supervisor supplies the Home Assistant labels from `config.yaml`; do not duplicate them in the Dockerfile. For an Arcane upgrade, update the pinned tag and the package version together.
-4. Run the relevant checks, commit and push to the branch users have installed.
-5. Home Assistant discovers the new version when its store refreshes. Users update through Home Assistant; no GitHub Release is needed.
+Both packages share one semantic release version, independent of the upstream Arcane tag. For a packaging change, increment both `config.yaml` versions and update the add-on changelogs. Supervisor supplies the image labels; no Dockerfile package version is needed.
+
+Renovate groups runtime image updates and bumps both manifests with `bumpVersions`, including proxy-only or Alpine-only updates. Arcane stays pinned to the same upstream version in both Dockerfiles. CI checks that invariant without hardcoding a release, so future Renovate updates can pass. Non-major updates auto-merge after successful checks; major updates require review.
+
+Enable the Renovate GitHub App for this repository and allow squash merging. Protect `main` with the two validation jobs as required checks. Renovate performs merges itself (`platformAutomerge: false`); no scheduled Renovate workflow or PAT is needed. GitHub Actions needs permission to create tags and releases via `GITHUB_TOKEN`.
+
+The pipeline runs validation on native amd64 and aarch64 runners. After successful validation on `main`, it creates the package-version tag and generates GitHub release notes. Re-running the pipeline can finish a missing release for an existing tag. Home Assistant uses the manifests for update discovery; GitHub Releases provide notes, not images. Enable automatic updates separately in Home Assistant if wanted.
 
 For forks, update the repository manifest URL, each add-on's `config.yaml` homepage, README installation badges and support links directly.
 
 ## Reference and artwork
 
-Packaging follows selected conventions from [Advanced SSH & Web Terminal v24.1.7](https://github.com/hassio-addons/app-ssh/tree/v24.1.7): a rootfs layout, pinned image inputs, Home Assistant/OCI metadata, configuration field descriptions and separate documentation files. Its terminal-specific privileges and S6 configuration do not apply here.
+Packaging follows selected conventions from [Advanced SSH & Web Terminal v24.1.7](https://github.com/hassio-addons/app-ssh/tree/v24.1.7): a rootfs layout, pinned image inputs, Supervisor-provided Home Assistant metadata, configuration field descriptions and separate documentation files. Its terminal-specific privileges and S6 configuration do not apply here.
 
 Preserve the upstream notices under `branding/` when redistributing Arcane artwork. Do not imply endorsement by Home Assistant, Arcane or the reference add-on's maintainers.
+
+Additional references: [Jellyfin packaging and Renovate](https://github.com/hassio-addons/app-jellyfin) and [ESPHome CI](https://github.com/esphome/esphome). The official Arcane runtime remains the Full Access base; Monitor retains only the extra filtering and privilege separation it needs.

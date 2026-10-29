@@ -1,0 +1,65 @@
+name: 🏷️ Tag
+
+on:
+  workflow_call:
+    outputs:
+      created:
+        description: Whether a new tag was created
+        value: ${{ jobs.tag.outputs.created }}
+      version:
+        value: ${{ jobs.tag.outputs.version }}
+
+jobs:
+  tag:
+    name: 🏷️ Tag
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    outputs:
+      created: ${{ steps.check_tag.outputs.exists == 'false' }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: ⚙️ Setup git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: 📖 Read add-on version
+        id: version
+        run: |
+          version=$(sed -n 's/^version: //p' arcane_edge_agent/config.yaml)
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo '::error::Add-on version must be major.minor.patch.'
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: 🔎 Check if tag exists
+        id: check_tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$VERSION"; then
+            echo "Tag $VERSION already exists."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $VERSION does not exist."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🏷️ Create tag
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
