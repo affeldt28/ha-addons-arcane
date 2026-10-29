@@ -12,7 +12,6 @@ class StorageTests(unittest.TestCase):
     def test_migrate_reinstall_and_replace_settings(self):
         for package, entrypoint, legacy_subdir in [
             ('arcane_edge_agent', 'run-monitor', 'arcane'),
-            ('arcane_edge_agent_full', 'run-full', ''),
         ]:
             with self.subTest(package=package), tempfile.TemporaryDirectory() as temp:
                 base = Path(temp)

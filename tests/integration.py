@@ -160,53 +160,18 @@ exec sleep 300
         if fixture:
             docker('rm','-f',fixture)
         docker('volume','rm',volume)
-    # Full Access uses its own package version and retains state/pairing across reinstall.
+    # The Full image must inherit the complete official runtime unchanged.
     full_image = 'arcane-full-test:local'
     build_image(full_image, root/'arcane_edge_agent_full')
-    full_data = Path(temp)/'full-data'
-    full_config = Path(temp)/'full-config'
-    full_data.mkdir()
-    full_config.mkdir()
-    settings = {'MANAGER_API_URL':'http://invalid.test','AGENT_TOKEN':'fixture','EDGE_TRANSPORT':'poll'}
-    (full_data/'options.json').write_text(json.dumps(settings))
-    (full_data/'state-fixture').write_text('preserved')
-    full_agent = Path(temp)/'fake-full-agent'
-    full_agent.write_text("""#!/bin/sh
-set -eu
-[ "$(id -u)" = 0 ]
-[ "$DOCKER_HOST" = unix:///run/docker.sock ]
-[ "$MANAGER_API_URL" = http://invalid.test ]
-[ "$AGENT_TOKEN" = fixture ]
-[ "$EDGE_TRANSPORT" = poll ]
-[ "$(cat /app/data/state-fixture)" = preserved ]
-printf 'FULL_AGENT_STARTED\\n'
-exec sleep 300
-""")
-    os.chmod(full_agent,0o755)
-    for reinstall in (False, True):
-        if reinstall:
-            # Simulate loss of private options and state, with the public folder retained.
-            (full_data/'options.json').write_text(json.dumps(dict(settings, MANAGER_API_URL='', AGENT_TOKEN='')))
-            (full_data/'state-fixture').unlink()
-        started = docker('run','-d','--init',
-            '-e','DOCKER_HOST=unix:///run/docker.sock',
-            '-v',f'{fake_socket}:/run/docker.sock:ro',
-            '-v',f'{full_data}:/data','-v',f'{full_config}:/config',
-            '-v',f'{full_agent}:/app/arcane-agent:ro',full_image)
-        try:
-            for attempt in range(60):
-                logs = docker('logs',started)
-                if 'FULL_AGENT_STARTED' in logs:
-                    break
-                if docker('inspect','--format','{{.State.Running}}',started) != 'true':
-                    raise AssertionError(f'Full Access startup failed: {logs}')
-                time.sleep(.1)
-            else:
-                raise AssertionError(f'Full Access did not start: {logs}')
-            docker('stop','-t','15',started)
-            assert docker('inspect','--format','{{.State.ExitCode}}',started) == '0'
-        finally:
-            docker('rm','-f',started)
-    print('Full Access migrates state and reuses retained state and pairing after reinstall.')
+    upstream = next(line.split('=', 1)[1] for line in
+                    (root/'arcane_edge_agent_full/Dockerfile').read_text().splitlines()
+                    if line.startswith('ARG BUILD_FROM='))
+    original = json.loads(docker('image', 'inspect', upstream))[0]
+    packaged = json.loads(docker('image', 'inspect', full_image))[0]
+    assert original['RootFS'] == packaged['RootFS'], 'Full image changed upstream filesystem'
+    original_config = original['Config']
+    packaged_config = packaged['Config']
+    assert original_config == packaged_config, 'Full image changed upstream configuration'
+    print('Full Access preserves the official filesystem and runtime; Supervisor supplies HA labels.')
     server.shutdown()
     server.server_close()

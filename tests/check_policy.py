@@ -12,11 +12,17 @@ assert monitor['docker_api'] and full['docker_api']
 assert set(policy) == {'GET','HEAD'}
 assert 'image' not in monitor and 'DOCKER_HOST' not in monitor['options']
 assert 'image' not in full
-assert 'FROM ghcr.io/getarcaneapp/agent:v2.16.1' in (root/'arcane_edge_agent_full/Dockerfile').read_text()
+full_dockerfile = (root/'arcane_edge_agent_full/Dockerfile').read_text()
+assert 'ARG BUILD_FROM=ghcr.io/getarcaneapp/agent:v2.17.1' in full_dockerfile
+assert 'FROM ${BUILD_FROM}' in full_dockerfile
+assert full['legacy'] is True
 assert full['environment']['DOCKER_HOST'] == 'unix:///run/docker.sock'
 assert 'Full Access' in full['name'] and 'WARNING' in full['description']
 for cfg in [monitor,full]:
-    assert cfg['map'] == [{'type': 'addon_config', 'read_only': False}]
+    expected_map = {'type': 'addon_config', 'read_only': False}
+    if cfg is full:
+        expected_map['path'] = '/app/data'
+    assert cfg['map'] == [expected_map]
     assert not cfg.get('ports') and not cfg.get('host_network')
     assert not cfg.get('hassio_api') and not cfg.get('full_access')
     assert cfg['boot'] == 'manual'

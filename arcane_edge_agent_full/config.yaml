@@ -23,11 +23,8 @@ schema:
   EDGE_TRANSPORT: list(poll|auto|websocket|grpc)
 environment:
   EDGE_AGENT: 'true'
-  AGENT_MODE: 'true'
-  ENVIRONMENT: production
   DOCKER_HOST: unix:///run/docker.sock
-  PUID: '0'
-  PGID: '0'
 map:
 - type: addon_config
+  path: /app/data
   read_only: false

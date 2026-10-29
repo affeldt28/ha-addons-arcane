@@ -5,13 +5,13 @@ Issues and pull requests are welcome. For bugs, include the add-on version, CPU 
 ## Repository layout
 
 - `arcane_edge_agent/`: Monitor's local image build, startup script and fixed Docker API policy.
-- `arcane_edge_agent_full/`: Full Access image packaging the pinned official Arcane binary.
+- `arcane_edge_agent_full/`: Full Access image inheriting the pinned official Arcane image with only Home Assistant labels.
 - `tests/`: configuration checks, Docker integration tests and their helpers.
 - `.github/workflows/validate.yml`: CI validation.
 
 Each add-on has its own README, setup documentation, changelog, translations, icon and logo. Add-on manifests use YAML.
 
-Monitor uses Docker's init (`init: true`) and supervises its two processes in its startup script. It does not use S6. Both startup scripts read Supervisor options and retain pairing settings in the public add-on configuration folder. Neither agent needs host networking, exposed host ports or Supervisor API permissions.
+Monitor uses Docker's init (`init: true`) and supervises its two processes in its startup script. It does not use S6. Monitor reads Supervisor options and retains pairing settings in the public add-on configuration folder. Full Access uses Supervisor legacy option-to-environment forwarding and mounts its public folder at `/app/data`, without a custom startup script. Neither agent needs host networking, exposed host ports or Supervisor API permissions.
 
 ## Local validation
 
@@ -34,7 +34,7 @@ For changes to Docker access, verify both allowed monitoring requests and blocke
 
 1. Update the relevant add-on's configuration version and changelog.
 2. For Monitor, also update the Dockerfile's default `BUILD_VERSION` when changing the package version. Its upstream Arcane and proxy tags are pinned separately.
-3. Full Access is also built locally. Its `Dockerfile` pins the upstream image independently of the package version. For a packaging-only fix, increment the suffix (for example `2.16.1-1` → `2.16.1-2`) in `config.yaml` and the Dockerfile default `BUILD_VERSION`, leaving the upstream `FROM` tag unchanged. For an Arcane upgrade, update the pinned tag and the package version together.
+3. Full Access is also built locally. Its `Dockerfile` pins the upstream image independently of the package version. For a packaging-only fix, increment the suffix (for example `2.16.1-1` → `2.16.1-2`) in `config.yaml`, leaving the upstream `BUILD_FROM` default unchanged. Supervisor supplies the Home Assistant labels from `config.yaml`; do not duplicate them in the Dockerfile. For an Arcane upgrade, update the pinned tag and the package version together.
 4. Run the relevant checks, commit and push to the branch users have installed.
 5. Home Assistant discovers the new version when its store refreshes. Users update through Home Assistant; no GitHub Release is needed.
 

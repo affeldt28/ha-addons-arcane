@@ -15,9 +15,8 @@ jobs:
           python-version: '3.12'
       - run: pip install -r tests/requirements.txt
       - run: sh -n arcane_edge_agent/rootfs/usr/local/bin/run-monitor
-      - run: sh -n arcane_edge_agent_full/rootfs/usr/local/bin/run-full
       - name: Lint agent startup
-        run: shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor arcane_edge_agent_full/rootfs/usr/local/bin/run-full
+        run: shellcheck arcane_edge_agent/rootfs/usr/local/bin/run-monitor
       - run: python3 tests/check_policy.py
       - name: Test storage migration and registry retries
         run: python3 -m unittest discover -s tests -p 'test_*.py'
