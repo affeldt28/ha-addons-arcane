@@ -1,6 +1,6 @@
 # Runtime images are pinned; Home Assistant builds for the selected architecture.
 ARG BUILD_FROM=alpine:3.23
-FROM ghcr.io/getarcaneapp/agent:v2.16.1 AS agent
+FROM ghcr.io/getarcaneapp/agent:v2.17.1 AS agent
 FROM ghcr.io/wollomatic/socket-proxy:1.13.1 AS proxy
 FROM ${BUILD_FROM}
 
@@ -16,7 +16,7 @@ COPY rootfs /
 RUN chmod 0755 /usr/local/bin/run-monitor
 
 ARG BUILD_ARCH
-ARG BUILD_VERSION=2.16.1-3
+ARG BUILD_VERSION=2.17.1
 ARG BUILD_NAME="Arcane Agent (Monitor)"
 ARG BUILD_DESCRIPTION="Arcane Edge agent with filtered Docker monitoring access"
 ARG BUILD_DATE

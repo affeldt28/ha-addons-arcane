@@ -1,14 +1,17 @@
-arch:
-- amd64
-- aarch64
+---
+name: Arcane Agent (Full Access)
+version: dev
+slug: arcane_edge_agent_full
+description: 'WARNING: full Docker control.'
+url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent_full
+docker_api: true
+init: true
 startup: services
 boot: manual
 stage: experimental
-init: true
-name: Arcane Agent (Full Access)
-version: 2.16.1-1
-slug: arcane_edge_agent_full
-description: 'WARNING: full Docker control.'
+arch:
+- amd64
+- aarch64
 backup: cold
 options:
   MANAGER_API_URL: ''
@@ -18,7 +21,6 @@ schema:
   MANAGER_API_URL: url
   AGENT_TOKEN: password
   EDGE_TRANSPORT: list(poll|auto|websocket|grpc)
-docker_api: true
 environment:
   EDGE_AGENT: 'true'
   AGENT_MODE: 'true'
@@ -29,4 +31,3 @@ environment:
 map:
 - type: addon_config
   read_only: false
-url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent_full

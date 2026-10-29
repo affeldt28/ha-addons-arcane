@@ -1,14 +1,17 @@
-arch:
-- amd64
-- aarch64
+---
+name: Arcane Agent (Monitor)
+version: dev
+slug: arcane_edge_agent
+description: Read-only Docker monitoring for Arcane.
+url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent
+docker_api: true
+init: true
 startup: services
 boot: manual
 stage: experimental
-init: true
-name: Arcane Agent (Monitor)
-version: 2.16.1-3
-slug: arcane_edge_agent
-description: Read-only Docker monitoring for Arcane.
+arch:
+- amd64
+- aarch64
 backup: cold
 options:
   MANAGER_API_URL: ''
@@ -18,11 +21,7 @@ schema:
   MANAGER_API_URL: url
   AGENT_TOKEN: password
   EDGE_TRANSPORT: list(poll|auto|websocket|grpc)
-docker_api: true
-breaking_versions:
-- 2.16.1-1
 timeout: 30
-url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent
 map:
 - type: addon_config
   read_only: false
