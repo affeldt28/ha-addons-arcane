@@ -1,126 +1,126 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ],
-  "enabledManagers": [
-    "dockerfile",
-    "github-actions",
-    "pip_requirements",
-    "custom.regex"
-  ],
-  "dependencyDashboard": false,
-  "branchPrefix": "renovate/",
-  "prConcurrentLimit": 1,
-  "rebaseWhen": "behind-base-branch",
-  "automerge": true,
-  "automergeType": "pr",
-  "automergeStrategy": "squash",
-  "platformAutomerge": false,
-  "packageRules": [
-    {
-      "description": "Update upstream image and package versions together; reset packaging revision to 1.",
-      "matchPackageNames": [
-        "getarcaneapp/agent"
-      ],
-      "groupName": "upstream app",
-      "groupSlug": "upstream-app",
-      "addLabels": [
-        "docker 🐳"
-      ]
-    },
-    {
-      "description": "Increment only the packaging revision for other runtime image updates.",
-      "matchManagers": [
-        "dockerfile"
-      ],
-      "matchPackageNames": [
-        "!getarcaneapp/agent"
-      ],
-      "groupName": "packaging runtime",
-      "groupSlug": "packaging-runtime",
-      "bumpVersions": [
-        {
-          "name": "Packaging revision: arcane_edge_agent/config.yaml",
-          "filePatterns": [
-            "arcane_edge_agent/config.yaml"
-          ],
-          "matchStrings": [
-            "(?<prefix>version: )(?<version>\\d+\\.\\d+\\.\\d+-\\d+)(?<suffix>\\s)"
-          ],
-          "bumpType": "prerelease"
-        },
-        {
-          "name": "Packaging revision: arcane_edge_agent_full/config.yaml",
-          "filePatterns": [
-            "arcane_edge_agent_full/config.yaml"
-          ],
-          "matchStrings": [
-            "(?<prefix>version: )(?<version>\\d+\\.\\d+\\.\\d+-\\d+)(?<suffix>\\s)"
-          ],
-          "bumpType": "prerelease"
-        }
-      ],
-      "addLabels": [
-        "docker 🐳"
-      ]
-    },
-    {
-      "description": "Maintain full version comments and commit pins for GitHub Actions.",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchDepTypes": [
-        "action"
-      ],
-      "groupName": "GitHub Actions",
-      "pinDigests": true,
-      "addLabels": [
-        "github-actions :octocat:"
-      ]
-    },
-    {
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "automerge": false,
-      "addLabels": [
-        "breaking 💥"
-      ]
-    }
-  ],
-  "labels": [
-    "dependencies 📦"
-  ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/arcane_edge_agent/config\\.yaml$/"
-      ],
-      "matchStrings": [
-        "(?<prefix>version: )(?<currentValue>\\d+\\.\\d+\\.\\d+)-\\d+(?<suffix>\\s)"
-      ],
-      "depNameTemplate": "getarcaneapp/agent",
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
-      "autoReplaceStringTemplate": "version: {{{newValue}}}-1\n"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/arcane_edge_agent_full/config\\.yaml$/"
-      ],
-      "matchStrings": [
-        "(?<prefix>version: )(?<currentValue>\\d+\\.\\d+\\.\\d+)-\\d+(?<suffix>\\s)"
-      ],
-      "depNameTemplate": "getarcaneapp/agent",
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "semver",
-      "extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
-      "autoReplaceStringTemplate": "version: {{{newValue}}}-1\n"
-    }
-  ]
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": [
+		"config:recommended",
+		"helpers:pinGitHubActionDigests"
+	],
+	"enabledManagers": [
+		"dockerfile",
+		"github-actions",
+		"pip_requirements",
+		"custom.regex"
+	],
+	"dependencyDashboard": false,
+	"branchPrefix": "renovate/",
+	"prConcurrentLimit": 1,
+	"rebaseWhen": "behind-base-branch",
+	"automerge": true,
+	"automergeType": "pr",
+	"automergeStrategy": "squash",
+	"platformAutomerge": false,
+	"packageRules": [
+		{
+			"description": "Update upstream image and package versions together; reset packaging revision to 1.",
+			"matchPackageNames": [
+				"getarcaneapp/agent"
+			],
+			"groupName": "upstream app",
+			"groupSlug": "upstream-app",
+			"addLabels": [
+				"docker 🐳"
+			]
+		},
+		{
+			"description": "Increment only the packaging revision for other runtime image updates.",
+			"matchManagers": [
+				"dockerfile"
+			],
+			"matchPackageNames": [
+				"!getarcaneapp/agent"
+			],
+			"groupName": "packaging runtime",
+			"groupSlug": "packaging-runtime",
+			"bumpVersions": [
+				{
+					"name": "Packaging revision: arcane_edge_agent/config.yaml",
+					"filePatterns": [
+						"arcane_edge_agent/config.yaml"
+					],
+					"matchStrings": [
+						"(?<prefix>version: )(?<version>\\d+\\.\\d+\\.\\d+-\\d+)(?<suffix>\\s)"
+					],
+					"bumpType": "prerelease"
+				},
+				{
+					"name": "Packaging revision: arcane_edge_agent_full/config.yaml",
+					"filePatterns": [
+						"arcane_edge_agent_full/config.yaml"
+					],
+					"matchStrings": [
+						"(?<prefix>version: )(?<version>\\d+\\.\\d+\\.\\d+-\\d+)(?<suffix>\\s)"
+					],
+					"bumpType": "prerelease"
+				}
+			],
+			"addLabels": [
+				"docker 🐳"
+			]
+		},
+		{
+			"description": "Maintain full version comments and commit pins for GitHub Actions.",
+			"matchManagers": [
+				"github-actions"
+			],
+			"matchDepTypes": [
+				"action"
+			],
+			"groupName": "GitHub Actions",
+			"pinDigests": true,
+			"addLabels": [
+				"github-actions :octocat:"
+			]
+		},
+		{
+			"matchUpdateTypes": [
+				"major"
+			],
+			"automerge": false,
+			"addLabels": [
+				"breaking 💥"
+			]
+		}
+	],
+	"labels": [
+		"dependencies 📦"
+	],
+	"customManagers": [
+		{
+			"customType": "regex",
+			"managerFilePatterns": [
+				"/arcane_edge_agent/config\\.yaml$/"
+			],
+			"matchStrings": [
+				"(?<prefix>version: )(?<currentValue>\\d+\\.\\d+\\.\\d+)-\\d+(?<suffix>\\s)"
+			],
+			"depNameTemplate": "getarcaneapp/agent",
+			"datasourceTemplate": "docker",
+			"versioningTemplate": "semver",
+			"extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
+			"autoReplaceStringTemplate": "version: {{{newValue}}}-1\n"
+		},
+		{
+			"customType": "regex",
+			"managerFilePatterns": [
+				"/arcane_edge_agent_full/config\\.yaml$/"
+			],
+			"matchStrings": [
+				"(?<prefix>version: )(?<currentValue>\\d+\\.\\d+\\.\\d+)-\\d+(?<suffix>\\s)"
+			],
+			"depNameTemplate": "getarcaneapp/agent",
+			"datasourceTemplate": "docker",
+			"versioningTemplate": "semver",
+			"extractVersionTemplate": "^v?(?<version>\\d+\\.\\d+\\.\\d+)$",
+			"autoReplaceStringTemplate": "version: {{{newValue}}}-1\n"
+		}
+	]
 }
