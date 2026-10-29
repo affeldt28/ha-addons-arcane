@@ -162,10 +162,12 @@ exec sleep 300
         docker('volume','rm',volume)
     # The Full image must inherit the complete official runtime unchanged.
     full_image = 'arcane-full-test:local'
-    build_image(full_image, root/'arcane_edge_agent_full')
     upstream = next(line.split('=', 1)[1] for line in
                     (root/'arcane_edge_agent_full/Dockerfile').read_text().splitlines()
                     if line.startswith('ARG BUILD_FROM='))
+    # BuildKit's base-image cache does not create a locally inspectable image tag.
+    docker('pull', upstream)
+    build_image(full_image, root/'arcane_edge_agent_full')
     original = json.loads(docker('image', 'inspect', upstream))[0]
     packaged = json.loads(docker('image', 'inspect', full_image))[0]
     assert original['RootFS'] == packaged['RootFS'], 'Full image changed upstream filesystem'
