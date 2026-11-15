@@ -1,7 +1,7 @@
 # Runtime images are pinned; Home Assistant builds for the selected architecture.
 ARG BUILD_FROM=alpine:3.24
 
-FROM getarcaneapp/agent:v2.17.1 AS agent
+FROM getarcaneapp/agent:v2.17.3 AS agent
 FROM ghcr.io/wollomatic/socket-proxy:1.13.2 AS proxy
 FROM ${BUILD_FROM}
 
