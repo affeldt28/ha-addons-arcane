@@ -1,6 +1,6 @@
 ---
 name: Arcane Agent (Full Access)
-version: 3.0.1-1
+version: 3.0.1-2
 slug: arcane_edge_agent_full
 description: 'WARNING: full Docker control.'
 url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent_full
@@ -19,7 +19,8 @@ options:
   ARCANE_AGENT_TOKEN: ''
   ARCANE_AGENT_TRANSPORT: auto
 schema:
-  ARCANE_MANAGER_API_URL: url
+  # Allow blank defaults during installation and migration; validate configured URLs.
+  ARCANE_MANAGER_API_URL: 'match(^$|^https?://[^ /]+$)'
   ARCANE_AGENT_TOKEN: password
   ARCANE_AGENT_TRANSPORT: list(auto|websocket|grpc)
 environment:

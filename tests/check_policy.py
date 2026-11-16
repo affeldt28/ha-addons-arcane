@@ -34,6 +34,14 @@ for cfg in [monitor,full]:
     assert not cfg.get('hassio_api') and not cfg.get('full_access')
     assert cfg['boot'] == 'manual'
     assert set(cfg['options']) == set(cfg['schema']) == {'ARCANE_MANAGER_API_URL','ARCANE_AGENT_TOKEN','ARCANE_AGENT_TRANSPORT'}
+    # Blank defaults must pass Supervisor validation before users can configure Arcane 3.
+    url_schema = cfg['schema']['ARCANE_MANAGER_API_URL']
+    assert url_schema.startswith('match(') and url_schema.endswith(')')
+    url_pattern = url_schema[6:-1]
+    assert re.match(url_pattern, cfg['options']['ARCANE_MANAGER_API_URL'])
+    assert re.match(url_pattern, 'https://manager.example.com')
+    assert not re.match(url_pattern, r'https\://manager.example.com')
+    assert not re.match(url_pattern, 'invalid')
     assert cfg['options']['ARCANE_AGENT_TRANSPORT'] == 'auto'
     assert cfg['schema']['ARCANE_AGENT_TRANSPORT'] == 'list(auto|websocket|grpc)'
 CASES = [

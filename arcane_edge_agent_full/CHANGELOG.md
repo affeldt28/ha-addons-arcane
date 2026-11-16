@@ -2,6 +2,10 @@
 
 [Official Arcane changelog](https://github.com/getarcaneapp/arcane/releases) · [Add-on releases](https://github.com/affeldt28/ha-addons-arcane/releases)
 
+## 3.0.1-2
+
+- Allow an empty Manager URL during installation and upgrades so Supervisor can accept the new Arcane 3 option defaults. Configure the Arcane 3 URL and a new enrollment token before starting.
+
 ## 3.0.1-1
 
 - Update Arcane from v2.17.3 to v3.0.1.
