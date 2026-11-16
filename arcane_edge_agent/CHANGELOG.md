@@ -2,6 +2,10 @@
 
 [Official Arcane changelog](https://github.com/getarcaneapp/arcane/releases) · [Add-on releases](https://github.com/affeldt28/ha-addons-arcane/releases)
 
+## 3.0.1-4
+
+- Save migrated URL, token and transport in the new Home Assistant Configuration fields and remove legacy fields after a successful save. Retry failed saves on restart.
+
 ## 3.0.1-3
 
 - Automatically reuse legacy Home Assistant URL and token fields when new fields are blank, and replace polling with automatic tunnel transport.

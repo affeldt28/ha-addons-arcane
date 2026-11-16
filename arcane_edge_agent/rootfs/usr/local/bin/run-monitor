@@ -35,6 +35,22 @@ if [ "$options" != /config/options.json ]; then
     mv /config/options.json.tmp /config/options.json
 fi
 options=/config/options.json
+# Persist canonical fields in Supervisor so Configuration displays the migration.
+if [ -n "${SUPERVISOR_TOKEN:-}" ] && \
+    ! jq -e --slurpfile original /data/options.json '. == $original[0]' "$options" >/dev/null; then
+    jq '{options: .}' "$options" > /config/supervisor-options.json.tmp
+    if wget -q -T 10 -O /config/supervisor-result.json.tmp \
+        --header="Authorization: Bearer $SUPERVISOR_TOKEN" \
+        --header='Content-Type: application/json' \
+        --post-file=/config/supervisor-options.json.tmp \
+        http://supervisor/addons/self/options 2>/dev/null \
+        && jq -e '.result == "ok"' /config/supervisor-result.json.tmp >/dev/null 2>&1; then
+        echo "Saved migrated Arcane fields in Home Assistant Configuration."
+    else
+        echo "WARNING: Could not save migrated Configuration fields; startup continues. Retry by restarting the add-on." >&2
+    fi
+    rm -f /config/supervisor-options.json.tmp /config/supervisor-result.json.tmp
+fi
 [ -S /var/run/docker.sock ] || fail "Docker socket missing. Disable Protection mode for this add-on."
 # Never chmod/chown the host socket. Fail closed if the agent user could bypass the proxy.
 "$su_exec" 65532:65532 sh -c 'test ! -w /var/run/docker.sock' || \

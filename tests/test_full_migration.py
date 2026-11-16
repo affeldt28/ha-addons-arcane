@@ -11,12 +11,16 @@ class FullMigrationTests(unittest.TestCase):
     def run_wrapper(self, **options):
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(('ARCANE_', 'EDGE_')) and key not in ('MANAGER_API_URL', 'AGENT_TOKEN')}
+        env.pop('SUPERVISOR_TOKEN', None)
+        env.pop('HASSIO_TOKEN', None)
         env.update(options)
         return subprocess.run(['sh', str(SCRIPT), 'sh', '-c', '''
             printf '%s\\n' "$ARCANE_MANAGER_API_URL" "$ARCANE_AGENT_TOKEN" "$ARCANE_AGENT_TRANSPORT"
             test "${MANAGER_API_URL-unset}" = unset
             test "${AGENT_TOKEN-unset}" = unset
             test "${EDGE_TRANSPORT-unset}" = unset
+            test "${SUPERVISOR_TOKEN-unset}" = unset
+            test "${HASSIO_TOKEN-unset}" = unset
         '''], env=env, text=True, capture_output=True)
 
     def test_legacy_ui_options_and_blank_defaults(self):

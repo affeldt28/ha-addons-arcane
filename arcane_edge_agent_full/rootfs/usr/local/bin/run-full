@@ -1,5 +1,9 @@
 #!/bin/sh
 set -eu
+migration_needed=false
+if [ -n "${MANAGER_API_URL:-}${AGENT_TOKEN:-}${EDGE_TRANSPORT:-}" ]; then
+    migration_needed=true
+fi
 # Supervisor forwards the Configuration fields. New nonempty fields take precedence.
 ARCANE_MANAGER_API_URL=${ARCANE_MANAGER_API_URL:-${MANAGER_API_URL:-}}
 case "$ARCANE_MANAGER_API_URL" in
@@ -11,4 +15,10 @@ ARCANE_AGENT_TRANSPORT=${ARCANE_AGENT_TRANSPORT:-auto}
 # Never pass removed Arcane 2 names to the Arcane 3 process.
 unset MANAGER_API_URL AGENT_TOKEN EDGE_TRANSPORT
 export ARCANE_MANAGER_API_URL ARCANE_AGENT_TOKEN ARCANE_AGENT_TRANSPORT
+if [ "$migration_needed" = true ] && [ -n "${SUPERVISOR_TOKEN:-}" ] \
+    && [ -n "$ARCANE_MANAGER_API_URL" ] && [ -n "$ARCANE_AGENT_TOKEN" ]; then
+    /usr/local/bin/migration-save || true
+fi
+# Keep the Supervisor credential out of the agent process.
+unset SUPERVISOR_TOKEN HASSIO_TOKEN
 exec "$@"

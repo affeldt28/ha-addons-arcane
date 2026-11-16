@@ -1,6 +1,6 @@
 ---
 name: Arcane Agent (Monitor)
-version: 3.0.1-3
+version: 3.0.1-4
 slug: arcane_edge_agent
 description: Read-only Docker monitoring for Arcane.
 url: https://github.com/affeldt28/ha-addons-arcane/tree/main/arcane_edge_agent
