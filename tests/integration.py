@@ -86,13 +86,18 @@ with tempfile.TemporaryDirectory() as temp:
     config.mkdir()
     (data/'arcane').mkdir()
     (data/'arcane'/'migration-fixture').write_text('preserved')
-    (data/'options.json').write_text(json.dumps({'MANAGER_API_URL':'http://invalid.test','AGENT_TOKEN':'fixture','EDGE_TRANSPORT':'poll'}))
+    (data/'options.json').write_text(json.dumps({'ARCANE_MANAGER_API_URL':'http://invalid.test','ARCANE_AGENT_TOKEN':'fixture','ARCANE_AGENT_TRANSPORT':'auto'}))
     fake_agent = Path(temp)/'fake-agent'
     fake_agent.write_text("""#!/bin/sh
 set -eu
 [ "$(id -u)" = 65532 ]
 [ "$(id -G)" = 65532 ]
 [ "$DOCKER_HOST" = tcp://127.0.0.1:2375 ]
+[ "$ARCANE_AGENT" = true ]
+[ "$ARCANE_MANAGER_API_URL" = http://invalid.test ]
+[ "$ARCANE_AGENT_TOKEN" = fixture ]
+[ "$ARCANE_AGENT_TRANSPORT" = auto ]
+[ "$ARCANE_LISTEN" = 127.0.0.1 ]
 [ "${SUPERVISOR_TOKEN-unset}" = unset ]
 test ! -w /var/run/docker.sock
 printf 'ENTRYPOINT_TEST_AGENT_STARTED\\n'

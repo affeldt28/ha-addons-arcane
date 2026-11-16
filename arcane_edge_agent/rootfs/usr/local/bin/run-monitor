@@ -8,15 +8,15 @@ su_exec=$(command -v su-exec) || fail "Privilege-drop helper su-exec is missing.
 umask 077
 mkdir -p /config
 options=/data/options.json
-if jq -e '.MANAGER_API_URL == "" and .AGENT_TOKEN == ""' "$options" >/dev/null \
+if jq -e '.ARCANE_MANAGER_API_URL == "" and .ARCANE_AGENT_TOKEN == ""' "$options" >/dev/null \
     && [ -f /config/options.json ]; then
     options=/config/options.json
 fi
-jq -e '(.MANAGER_API_URL | type == "string" and test("^https?://[^/ ]+")) and
-       (.AGENT_TOKEN | type == "string" and length > 0) and
-       (.EDGE_TRANSPORT == "poll" or .EDGE_TRANSPORT == "auto" or
-        .EDGE_TRANSPORT == "websocket" or .EDGE_TRANSPORT == "grpc")' \
-    "$options" >/dev/null || fail "Configure the Manager URL, token and Edge transport."
+jq -e '(.ARCANE_MANAGER_API_URL | type == "string" and test("^https?://[^/ ]+")) and
+       (.ARCANE_AGENT_TOKEN | type == "string" and length > 0) and
+       (.ARCANE_AGENT_TRANSPORT == "auto" or
+        .ARCANE_AGENT_TRANSPORT == "websocket" or .ARCANE_AGENT_TRANSPORT == "grpc")' \
+    "$options" >/dev/null || fail "Configure the Arcane 3 Manager URL, enrollment token and agent transport; legacy polling settings are unsupported."
 if [ "$options" != /config/options.json ]; then
     cp "$options" /config/options.json.tmp
     mv /config/options.json.tmp /config/options.json
@@ -65,12 +65,12 @@ done
 [ "$ready" = true ] || fail "Docker proxy did not become ready."
 echo "Starting Arcane in monitor-only mode. Docker changes are blocked."
 env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/config/arcane \
-    TZ="${TZ:-UTC}" ENVIRONMENT=production GIN_MODE=release ARCANE_IN_CONTAINER=true \
-    AGENT_MODE=true EDGE_AGENT=true LISTEN=127.0.0.1 PORT=3553 \
+    TZ="${TZ:-UTC}" ARCANE_ENVIRONMENT=production ARCANE_IN_CONTAINER=true \
+    ARCANE_AGENT=true ARCANE_LISTEN=127.0.0.1 ARCANE_PORT=3553 \
     DOCKER_HOST=tcp://127.0.0.1:2375 \
-    MANAGER_API_URL="$(jq -r .MANAGER_API_URL "$options")" \
-    AGENT_TOKEN="$(jq -r .AGENT_TOKEN "$options")" \
-    EDGE_TRANSPORT="$(jq -r .EDGE_TRANSPORT "$options")" \
+    ARCANE_MANAGER_API_URL="$(jq -r .ARCANE_MANAGER_API_URL "$options")" \
+    ARCANE_AGENT_TOKEN="$(jq -r .ARCANE_AGENT_TOKEN "$options")" \
+    ARCANE_AGENT_TRANSPORT="$(jq -r .ARCANE_AGENT_TRANSPORT "$options")" \
     "$su_exec" 65532:65532 /app/arcane-agent &
 agent_pid=$!
 # Terminate the whole add-on if either component fails; never fall back to the real socket.

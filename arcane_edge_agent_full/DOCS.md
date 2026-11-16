@@ -3,8 +3,8 @@
 > **WARNING: unrestricted Docker control. The connected Manager can change or delete containers, images, networks and volumes, including resources used by Home Assistant. This can stop Home Assistant or cause data loss. Only connect to a Manager you trust.**
 
 1. Install **Arcane Agent (Full Access)** only if you intend to grant host Docker control.
-2. In your separate Arcane Manager, create an Edge environment. If you also run Monitor Only, use a different environment and token.
-3. Set `MANAGER_API_URL`, `AGENT_TOKEN` and `EDGE_TRANSPORT` in Configuration. Poll is the default; auto, websocket and grpc are also available. Use HTTPS for remote connections.
+2. In your separate Arcane Manager, generate an agent enrollment configuration. If you also run Monitor Only, enroll it as a separate agent.
+3. Set `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT` in Configuration. Auto is the default; websocket and grpc are also available. Use HTTPS for remote connections.
 4. Disable Protection mode to permit Docker socket access. Start the add-on and confirm it connects. Start on boot is off by default; enable it after testing.
 
 ## Features and host limits
@@ -27,4 +27,8 @@ Stop the add-on and make a backup before updating. Previous releases stored agen
 
 Keep the Manager URL, token and transport entered in the Configuration tab. The old public `options.json` file is no longer read. Automatic state migration and pairing recovery were removed with the startup wrapper. Restart after changing options.
 
-For Docker permission errors, verify Protection mode is off. Supervisor mounts the Docker socket at `/run/docker.sock`; the agent must use `DOCKER_HOST=unix:///run/docker.sock`. A `no such file or directory` error mentioning `/var/run/docker.sock` indicates the old configuration. After installing the corrected package, stop and start the add-on so Supervisor recreates its container with the updated environment. For pairing failures, check Manager URL, token, TLS and outbound connectivity. Polling Standby is healthy.
+For Docker permission errors, verify Protection mode is off. Supervisor mounts the Docker socket at `/run/docker.sock`; the agent must use `DOCKER_HOST=unix:///run/docker.sock`. A `no such file or directory` error mentioning `/var/run/docker.sock` indicates the old configuration. After installing the corrected package, stop and start the add-on so Supervisor recreates its container with the updated environment. For pairing failures, check Manager URL, token, TLS and outbound connectivity.
+
+## Upgrading from Arcane 2
+
+Arcane 3 removes polling and legacy agent enrollment. Back up the add-on, upgrade your separate Manager to Arcane 3, and generate a new enrollment token. In Configuration, replace the old options with `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT: auto`, then re-enroll this agent. Old saved pairing settings cannot be reused for this upgrade. Keep the public configuration folder to preserve state.

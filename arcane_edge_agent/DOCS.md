@@ -1,10 +1,10 @@
 # Monitor Only setup
 
 1. Install this add-on. No companion proxy is needed.
-2. In your separate Arcane Manager, create an Edge environment and generate its agent configuration.
-3. Set `MANAGER_API_URL`, `AGENT_TOKEN` and `EDGE_TRANSPORT` in the Configuration tab. Poll is the default; auto, websocket and grpc are also available. Use HTTPS over untrusted networks.
+2. In your separate Arcane Manager, create an agent enrollment token and generate its agent configuration.
+3. Set `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT` in the Configuration tab. Auto is the default; websocket and grpc are also available. Use HTTPS over untrusted networks.
 4. Disable Protection mode, then start the add-on. Home Assistant requires this to mount Docker's socket, even though the Arcane process uses a filter.
-5. Confirm the environment connects. In polling mode, Standby is healthy; Online indicates an active tunnel. Enable Start on boot after testing.
+5. Confirm the environment connects. Online indicates an active tunnel. Enable Start on boot after testing.
 
 ## Access boundary
 
@@ -30,5 +30,9 @@ If you used the earlier unreleased two-container prototype, back up first: its d
 
 - Missing socket: disable Protection mode and restart.
 - Socket accessible to the agent user: startup deliberately refuses to run. Correct host socket ownership/permissions through the host administrator; this add-on never changes them.
-- Pairing issues: check token, URL, certificates and outbound connectivity; try poll if tunnel transport fails.
+- Pairing issues: check token, URL, certificates and outbound connectivity; try websocket if gRPC transport fails.
 - Forbidden Docker actions: expected for monitoring-only mode. Report missing monitoring endpoints for review.
+
+## Upgrading from Arcane 2
+
+Arcane 3 removes polling and legacy agent enrollment. Back up the add-on, upgrade your separate Manager to Arcane 3, and generate a new enrollment token. In Configuration, replace the old options with `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT: auto`, then re-enroll this agent. Old saved pairing settings cannot be reused for this upgrade. Keep the public configuration folder to preserve state.

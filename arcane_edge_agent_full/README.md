@@ -21,10 +21,10 @@ The Edge agent opens an **outbound connection to your Arcane Manager**. No inbou
 
 ## Get started
 
-1. In Arcane Manager, choose **Environments → Add Environment → Edge** and generate an agent configuration.
-2. In this add-on's **Configuration** tab, enter the Manager URL and token. The default **poll** transport works without a persistent tunnel.
+1. In Arcane Manager, create an agent enrollment token and generate an agent configuration.
+2. In this add-on's **Configuration** tab, enter the Manager URL and token. The default **auto** transport selects gRPC with a WebSocket fallback.
 3. Read the warning above, turn off **Protection mode**, and start the add-on.
-4. Confirm that the environment connects in Arcane. **Standby** is healthy in polling mode. Enable **Start on boot** after testing.
+4. Confirm that the environment connects in Arcane. Enable **Start on boot** after testing.
 
 You need Home Assistant with Supervisor, an existing Arcane Manager and a supported 64-bit host (amd64 or aarch64). Use a separate environment and token if you also run the monitoring variant.
 
@@ -37,3 +37,7 @@ The image uses the official Arcane runtime and entrypoint, adding only Home Assi
 [Setup, options and troubleshooting](https://github.com/affeldt28/ha-addons-arcane/blob/main/arcane_edge_agent_full/DOCS.md) · [Arcane documentation](https://getarcane.app/docs/remote/environments) · [Report an issue](https://github.com/affeldt28/ha-addons-arcane/issues)
 
 Independent community add-on. Arcane artwork belongs to the upstream project; [license and attribution](https://github.com/affeldt28/ha-addons-arcane/tree/main/branding).
+
+## Upgrading from Arcane 2
+
+Arcane 3 removes polling and legacy agent enrollment. Back up the add-on, upgrade your separate Manager to Arcane 3, and generate a new enrollment token. In Configuration, replace the old options with `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT: auto`, then re-enroll this agent. Old saved pairing settings cannot be reused for this upgrade. Keep the public configuration folder to preserve state.

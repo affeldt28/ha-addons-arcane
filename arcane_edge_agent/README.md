@@ -19,9 +19,9 @@ The agent connects **outbound to your Arcane Manager**. No inbound host port or 
 
 ## Get started
 
-1. In Arcane Manager, choose **Environments → Add Environment → Edge** and generate an agent configuration.
-2. In this add-on's **Configuration** tab, enter the Manager URL and agent token. Leave the transport on **poll** unless your setup needs another option.
-3. Turn off **Protection mode**, start the add-on, and check that the environment appears in Arcane. **Standby** is a healthy state when using polling.
+1. In Arcane Manager, create an agent enrollment token and generate an agent configuration.
+2. In this add-on's **Configuration** tab, enter the Manager URL and agent token. Leave the transport on **auto** unless your setup needs another option.
+3. Turn off **Protection mode**, start the add-on, and check that the environment appears in Arcane.
 
 You need Home Assistant with Supervisor, an existing Arcane Manager and a supported 64-bit host (amd64 or aarch64).
 
@@ -46,3 +46,7 @@ For management actions, choose **Arcane Agent (Full Access)** and read its acces
 [Setup, options and troubleshooting](https://github.com/affeldt28/ha-addons-arcane/blob/main/arcane_edge_agent/DOCS.md) · [Arcane documentation](https://getarcane.app/docs/remote/environments) · [Report an issue](https://github.com/affeldt28/ha-addons-arcane/issues)
 
 Independent community add-on. Arcane artwork belongs to the upstream project; [license and attribution](https://github.com/affeldt28/ha-addons-arcane/tree/main/branding).
+
+## Upgrading from Arcane 2
+
+Arcane 3 removes polling and legacy agent enrollment. Back up the add-on, upgrade your separate Manager to Arcane 3, and generate a new enrollment token. In Configuration, replace the old options with `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT: auto`, then re-enroll this agent. Old saved pairing settings cannot be reused for this upgrade. Keep the public configuration folder to preserve state.

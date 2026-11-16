@@ -19,7 +19,7 @@ class StorageTests(unittest.TestCase):
                 old_state = data/legacy_subdir
                 old_state.mkdir(parents=True)
                 (old_state/'state').write_text('original')
-                settings = dict(MANAGER_API_URL='https://manager.test', AGENT_TOKEN='secret', EDGE_TRANSPORT='grpc')
+                settings = dict(ARCANE_MANAGER_API_URL='https://manager.test', ARCANE_AGENT_TOKEN='secret', ARCANE_AGENT_TRANSPORT='grpc')
                 options = data/'options.json'
                 options.write_text(json.dumps(settings))
                 source = (ROOT/package/'rootfs/usr/local/bin'/entrypoint).read_text()
@@ -39,17 +39,25 @@ class StorageTests(unittest.TestCase):
                 self.assertEqual((config/'options.json').stat().st_mode & 0o777, 0o600)
                 # Retained state wins over old private state, and blank defaults reuse pairing.
                 (old_state/'state').write_text('stale')
-                options.write_text(json.dumps(dict(settings, MANAGER_API_URL='', AGENT_TOKEN='', EDGE_TRANSPORT='poll')))
+                options.write_text(json.dumps(dict(settings, ARCANE_MANAGER_API_URL='', ARCANE_AGENT_TOKEN='', ARCANE_AGENT_TRANSPORT='auto')))
                 result = run()
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual((config/'arcane/state').read_text(), 'original')
                 self.assertEqual(json.loads((config/'options.json').read_text()), settings)
                 # Explicit valid changes replace saved settings; partial changes fail safely.
-                changed = dict(settings, AGENT_TOKEN='replacement')
+                changed = dict(settings, ARCANE_AGENT_TOKEN='replacement')
                 options.write_text(json.dumps(changed))
                 self.assertEqual(run().returncode, 0)
                 self.assertEqual(json.loads((config/'options.json').read_text()), changed)
-                options.write_text(json.dumps(dict(changed, AGENT_TOKEN='')))
+                # Arcane 3 must reject removed polling transport and old enrollment keys.
+                for unsupported in [
+                    dict(changed, ARCANE_AGENT_TRANSPORT='poll'),
+                    dict(MANAGER_API_URL='https://manager.test', AGENT_TOKEN='old', EDGE_TRANSPORT='poll'),
+                ]:
+                    options.write_text(json.dumps(unsupported))
+                    self.assertNotEqual(run().returncode, 0)
+                    self.assertEqual(json.loads((config/'options.json').read_text()), changed)
+                options.write_text(json.dumps(dict(changed, ARCANE_AGENT_TOKEN='')))
                 self.assertNotEqual(run().returncode, 0)
                 self.assertEqual(json.loads((config/'options.json').read_text()), changed)
 

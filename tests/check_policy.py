@@ -22,6 +22,7 @@ assert monitor['version'].rsplit('-', 1)[0] == upstream[1].split(':v')[1], 'Pack
 assert monitor['version'] == full['version'], 'Both packages share one release version'
 assert 'FROM ${BUILD_FROM}' in full_dockerfile
 assert full['legacy'] is True
+assert full['environment']['ARCANE_AGENT'] == 'true'
 assert full['environment']['DOCKER_HOST'] == 'unix:///run/docker.sock'
 assert 'Full Access' in full['name'] and 'WARNING' in full['description']
 for cfg in [monitor,full]:
@@ -32,7 +33,9 @@ for cfg in [monitor,full]:
     assert not cfg.get('ports') and not cfg.get('host_network')
     assert not cfg.get('hassio_api') and not cfg.get('full_access')
     assert cfg['boot'] == 'manual'
-    assert set(cfg['options']) == set(cfg['schema']) == {'MANAGER_API_URL','AGENT_TOKEN','EDGE_TRANSPORT'}
+    assert set(cfg['options']) == set(cfg['schema']) == {'ARCANE_MANAGER_API_URL','ARCANE_AGENT_TOKEN','ARCANE_AGENT_TRANSPORT'}
+    assert cfg['options']['ARCANE_AGENT_TRANSPORT'] == 'auto'
+    assert cfg['schema']['ARCANE_AGENT_TRANSPORT'] == 'list(auto|websocket|grpc)'
 CASES = [
  ('GET','/_ping',True), ('HEAD','/v1.51/_ping',True),
  ('GET','/containers/json',True), ('GET','/v1.51/containers/abc/stats',True),
