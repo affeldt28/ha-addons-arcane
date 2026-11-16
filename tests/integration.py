@@ -178,12 +178,12 @@ exec sleep 300
     assert packaged['RootFS']['Layers'][:len(original['RootFS']['Layers'])] == original['RootFS']['Layers']
     original_config = original['Config']
     packaged_config = packaged['Config']
-    assert packaged_config['Entrypoint'] == ['/usr/local/bin/migration-sh', 'sh', '/usr/local/bin/run-full']
+    assert packaged_config['Entrypoint'] == ['/usr/local/bin/busybox', 'sh', '/usr/local/bin/run-full']
     for key in ('Cmd', 'User', 'WorkingDir', 'Env', 'Volumes'):
         assert original_config.get(key) == packaged_config.get(key), key
     result = docker('run', '--rm', '-e', 'MANAGER_API_URL=https://manager.test',
                     '-e', 'AGENT_TOKEN=fixture', '-e', 'EDGE_TRANSPORT=poll', full_image,
-                    '/usr/local/bin/migration-sh', 'sh', '-c',
+                    '/usr/local/bin/busybox', 'sh', '-c',
                     'test "$ARCANE_MANAGER_API_URL" = https://manager.test && '
                     'test "$ARCANE_AGENT_TOKEN" = fixture && test "$ARCANE_AGENT_TRANSPORT" = auto && '
                     'test "${AGENT_TOKEN-unset}" = unset')
