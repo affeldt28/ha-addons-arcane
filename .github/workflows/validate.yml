@@ -53,7 +53,9 @@ jobs:
 
       - name: ✅ Validate Renovate configuration
         if: matrix.arch == 'amd64'
-        run: npx --yes --package renovate@44 renovate-config-validator --strict .github/renovate.json
+        # Keep this version aligned with the schema in .github/renovate.json.
+        # 44.232.0 introduced dashboard objects before the hosted app supported them.
+        run: npx --yes --package renovate@44.231.0 renovate-config-validator --strict .github/renovate.json
 
       - name: 🔑 Authenticate to GitHub Container Registry
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0

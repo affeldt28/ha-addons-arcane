@@ -41,6 +41,8 @@ Migration: the previous package version `2.17.2` contained Arcane `2.17.1`. The 
 
 Enable the Renovate GitHub App for this repository and allow squash merging. Protect `main` with the two validation jobs as required checks. Renovate performs merges itself (`platformAutomerge: false`); no scheduled Renovate workflow or PAT is needed. GitHub Actions needs permission to create tags and releases via `GITHUB_TOKEN`.
 
+The Renovate schema and CI validator are pinned together to 44.231.0 for compatibility with the hosted app's boolean `dependencyDashboard` setting. Version 44.232.0 changed that setting to an object. Update both pins and the configuration together once the hosted app supports the new format.
+
 The pipeline runs validation on native amd64 and aarch64 runners. After successful validation on `main`, it creates the package-version tag and generates GitHub release notes. Re-running the pipeline can finish a missing release for an existing tag. Home Assistant uses the manifests for update discovery; GitHub Releases provide notes, not images. Enable automatic updates separately in Home Assistant if wanted.
 
 For forks, update the repository manifest URL, each add-on's `config.yaml` homepage, README installation badges and support links directly.
