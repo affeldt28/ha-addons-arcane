@@ -1,0 +1,50 @@
+name: 📝 Renovate changelog
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: renovate-changelog-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  changelog:
+    if: >-
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'renovate/')
+    runs-on: ubuntu-24.04
+    steps:
+      # Only execute trusted base-branch code; read PR files as data with git show.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - name: Generate and commit changelog entries
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin "$BASE_SHA" "$HEAD_SHA"
+          git update-ref refs/heads/base "$BASE_SHA"
+          git update-ref refs/heads/head "$HEAD_SHA"
+          python3 .github/scripts/renovate_changelog.py
+          # Preserve exactly the PR tree apart from the generated changelogs.
+          git read-tree "$HEAD_SHA"
+          git add arcane_edge_agent/CHANGELOG.md arcane_edge_agent_full/CHANGELOG.md
+          if git diff --cached --quiet "$HEAD_SHA"; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          TREE=$(git write-tree)
+          COMMIT=$(git commit-tree "$TREE" -p "$HEAD_SHA" -m 'docs: update add-on changelogs')
+          git push --force-with-lease="refs/heads/$HEAD_REF:$HEAD_SHA" origin "$COMMIT:refs/heads/$HEAD_REF"
+          # GITHUB_TOKEN pushes do not emit pull_request events. Validate the new SHA explicitly.
+          gh workflow run pipeline.yml --repo "$GITHUB_REPOSITORY" --ref "$HEAD_REF"
