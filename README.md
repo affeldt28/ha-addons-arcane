@@ -75,7 +75,7 @@ Use HTTPS for remote connections. Available transports are `auto`, `websocket` a
 
 ## Updates
 
-**Arcane 3 upgrade:** back up first, upgrade your Manager to Arcane 3, and re-enroll with a new enrollment token and the `ARCANE_*` options shown above. Polling and legacy pairing settings are no longer supported. See the selected add-on’s documentation for migration details.
+**Arcane 3 upgrade:** Back up first and upgrade the Manager and agents to Arcane 2.17.3, starting each once, before upgrading the Manager to Arcane 3. The add-on automatically reuses old `MANAGER_API_URL` and `AGENT_TOKEN` Configuration fields when the corresponding `ARCANE_*` fields are blank, and uses `auto` instead of polling. It also corrects an escaped `http\://` or `https\://` prefix. Explicit nonempty new URL and token fields take precedence. Existing edge-agent API keys remain usable; former direct agents need a new enrollment token. Migration happens at startup; the UI fields are not rewritten. Keep the old fields until you have entered the corresponding new values. Keep the public configuration folder to preserve state.
 
 Home Assistant checks the repository for newer add-on versions. After a release is pushed, use **Add-on Store → ⋮ → Check for updates**, then update the installed add-on. Enable automatic updates in Home Assistant if desired; releases marked as breaking changes require manual attention.
 

@@ -2,6 +2,11 @@
 
 [Official Arcane changelog](https://github.com/getarcaneapp/arcane/releases) · [Add-on releases](https://github.com/affeldt28/ha-addons-arcane/releases)
 
+## 3.0.1-3
+
+- Automatically reuse legacy Home Assistant URL and token fields when new fields are blank, and replace polling with automatic tunnel transport.
+- Correct escaped URL prefixes and preserve explicit new configuration. Existing edge-agent API keys remain supported by Arcane 3.
+
 ## 3.0.1-2
 
 - Allow an empty Manager URL during installation and upgrades so Supervisor can accept the new Arcane 3 option defaults. Configure the Arcane 3 URL and a new enrollment token before starting.

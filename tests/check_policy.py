@@ -33,7 +33,8 @@ for cfg in [monitor,full]:
     assert not cfg.get('ports') and not cfg.get('host_network')
     assert not cfg.get('hassio_api') and not cfg.get('full_access')
     assert cfg['boot'] == 'manual'
-    assert set(cfg['options']) == set(cfg['schema']) == {'ARCANE_MANAGER_API_URL','ARCANE_AGENT_TOKEN','ARCANE_AGENT_TRANSPORT'}
+    assert set(cfg['options']) == {'ARCANE_MANAGER_API_URL','ARCANE_AGENT_TOKEN','ARCANE_AGENT_TRANSPORT'}
+    assert set(cfg['schema']) == set(cfg['options']) | {'MANAGER_API_URL', 'AGENT_TOKEN', 'EDGE_TRANSPORT'}
     # Blank defaults must pass Supervisor validation before users can configure Arcane 3.
     url_schema = cfg['schema']['ARCANE_MANAGER_API_URL']
     assert url_schema.startswith('match(') and url_schema.endswith(')')

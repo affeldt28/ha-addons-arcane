@@ -12,7 +12,7 @@ Issues and pull requests are welcome. For bugs, include the add-on version, CPU 
 
 Each add-on has its own README, setup documentation, changelog, translations, icon and logo. Add-on manifests use YAML.
 
-Monitor uses Docker's init (`init: true`) and supervises its two processes in its startup script. It does not use S6. Monitor reads Supervisor options and retains pairing settings in the public add-on configuration folder. Full Access uses Supervisor legacy option-to-environment forwarding and mounts its public folder at `/app/data`, without a custom startup script. Neither agent needs host networking, exposed host ports or Supervisor API permissions.
+Monitor uses Docker's init (`init: true`) and supervises its two processes in its startup script. It does not use S6. Monitor reads Supervisor options and retains pairing settings in the public add-on configuration folder. Full Access uses Supervisor legacy option-to-environment forwarding and mounts its public folder at `/app/data`, with a static-shell startup launcher that maps legacy Configuration fields before executing the official agent. The launcher does not call Supervisor APIs or rewrite UI fields. Neither agent needs host networking, exposed host ports or Supervisor API permissions.
 
 ## Local validation
 

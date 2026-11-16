@@ -120,7 +120,7 @@ exec sleep 300
             raise AssertionError(f'Monitor entrypoint never launched agent: {docker("logs",started)}')
         assert 'Connection refused' not in logs, logs
         assert docker('exec',started,'cat','/config/arcane/migration-fixture') == 'preserved'
-        assert docker('exec',started,'cat','/config/options.json') == (data/'options.json').read_text()
+        assert json.loads(docker('exec',started,'cat','/config/options.json')) == json.loads((data/'options.json').read_text())
         docker('stop','-t','15',started)
         assert docker('inspect','--format','{{.State.ExitCode}}',started) == '0'
         print('Actual monitor entrypoint launches the agent unprivileged and stops cleanly.')
@@ -165,7 +165,7 @@ exec sleep 300
         if fixture:
             docker('rm','-f',fixture)
         docker('volume','rm',volume)
-    # The Full image must inherit the complete official runtime unchanged.
+    # Full Access preserves the official runtime with a small option migration launcher.
     full_image = 'arcane-full-test:local'
     upstream = next(line.split('=', 1)[1] for line in
                     (root/'arcane_edge_agent_full/Dockerfile').read_text().splitlines()
@@ -175,10 +175,18 @@ exec sleep 300
     build_image(full_image, root/'arcane_edge_agent_full')
     original = json.loads(docker('image', 'inspect', upstream))[0]
     packaged = json.loads(docker('image', 'inspect', full_image))[0]
-    assert original['RootFS'] == packaged['RootFS'], 'Full image changed upstream filesystem'
+    assert packaged['RootFS']['Layers'][:len(original['RootFS']['Layers'])] == original['RootFS']['Layers']
     original_config = original['Config']
     packaged_config = packaged['Config']
-    assert original_config == packaged_config, 'Full image changed upstream configuration'
-    print('Full Access preserves the official filesystem and runtime; Supervisor supplies HA labels.')
+    assert packaged_config['Entrypoint'] == ['/usr/local/bin/migration-sh', 'sh', '/usr/local/bin/run-full']
+    for key in ('Cmd', 'User', 'WorkingDir', 'Env', 'Volumes'):
+        assert original_config.get(key) == packaged_config.get(key), key
+    result = docker('run', '--rm', '-e', 'MANAGER_API_URL=https://manager.test',
+                    '-e', 'AGENT_TOKEN=fixture', '-e', 'EDGE_TRANSPORT=poll', full_image,
+                    '/usr/local/bin/migration-sh', 'sh', '-c',
+                    'test "$ARCANE_MANAGER_API_URL" = https://manager.test && '
+                    'test "$ARCANE_AGENT_TOKEN" = fixture && test "$ARCANE_AGENT_TRANSPORT" = auto && '
+                    'test "${AGENT_TOKEN-unset}" = unset')
+    print('Full Access preserves the official runtime and migrates legacy UI settings.')
     server.shutdown()
     server.server_close()

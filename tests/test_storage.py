@@ -49,10 +49,20 @@ class StorageTests(unittest.TestCase):
                 options.write_text(json.dumps(changed))
                 self.assertEqual(run().returncode, 0)
                 self.assertEqual(json.loads((config/'options.json').read_text()), changed)
-                # Arcane 3 must reject removed polling transport and old enrollment keys.
+                # Legacy UI options migrate even alongside the new blank defaults.
+                options.write_text(json.dumps(dict(
+                    MANAGER_API_URL=r'https\://manager.test', AGENT_TOKEN='old', EDGE_TRANSPORT='poll',
+                    ARCANE_MANAGER_API_URL='', ARCANE_AGENT_TOKEN='', ARCANE_AGENT_TRANSPORT='auto')))
+                result = run()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                migrated = dict(ARCANE_MANAGER_API_URL='https://manager.test', ARCANE_AGENT_TOKEN='old', ARCANE_AGENT_TRANSPORT='auto')
+                self.assertEqual(json.loads((config/'options.json').read_text()), migrated)
+                options.write_text(json.dumps(dict(changed, MANAGER_API_URL='https://stale.test', AGENT_TOKEN='stale', EDGE_TRANSPORT='poll')))
+                self.assertEqual(run().returncode, 0)
+                self.assertEqual(json.loads((config/'options.json').read_text()), changed)
+                # Explicit unsupported Arcane 3 transport still fails safely.
                 for unsupported in [
                     dict(changed, ARCANE_AGENT_TRANSPORT='poll'),
-                    dict(MANAGER_API_URL='https://manager.test', AGENT_TOKEN='old', EDGE_TRANSPORT='poll'),
                 ]:
                     options.write_text(json.dumps(unsupported))
                     self.assertNotEqual(run().returncode, 0)

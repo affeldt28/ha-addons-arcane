@@ -8,19 +8,33 @@ su_exec=$(command -v su-exec) || fail "Privilege-drop helper su-exec is missing.
 umask 077
 mkdir -p /config
 options=/data/options.json
-if jq -e '.ARCANE_MANAGER_API_URL == "" and .ARCANE_AGENT_TOKEN == ""' "$options" >/dev/null \
+normalize_options() {
+    jq '
+      .ARCANE_MANAGER_API_URL = (if (.ARCANE_MANAGER_API_URL // "") != ""
+        then .ARCANE_MANAGER_API_URL else (.MANAGER_API_URL // "") end) |
+      .ARCANE_MANAGER_API_URL |= (sub("^https\\\\://"; "https://") | sub("^http\\\\://"; "http://")) |
+      .ARCANE_AGENT_TOKEN = (if (.ARCANE_AGENT_TOKEN // "") != ""
+        then .ARCANE_AGENT_TOKEN else (.AGENT_TOKEN // "") end) |
+      .ARCANE_AGENT_TRANSPORT = (.ARCANE_AGENT_TRANSPORT //
+        (if .EDGE_TRANSPORT == "poll" then "auto" else .EDGE_TRANSPORT end) // "auto") |
+      del(.MANAGER_API_URL, .AGENT_TOKEN, .EDGE_TRANSPORT)
+    ' "$1"
+}
+normalize_options "$options" > /config/options.json.tmp
+if jq -e '.ARCANE_MANAGER_API_URL == "" and .ARCANE_AGENT_TOKEN == ""' /config/options.json.tmp >/dev/null \
     && [ -f /config/options.json ]; then
-    options=/config/options.json
+    normalize_options /config/options.json > /config/options.json.tmp
 fi
+options=/config/options.json.tmp
 jq -e '(.ARCANE_MANAGER_API_URL | type == "string" and test("^https?://[^/ ]+")) and
        (.ARCANE_AGENT_TOKEN | type == "string" and length > 0) and
        (.ARCANE_AGENT_TRANSPORT == "auto" or
         .ARCANE_AGENT_TRANSPORT == "websocket" or .ARCANE_AGENT_TRANSPORT == "grpc")' \
     "$options" >/dev/null || fail "Configure the Arcane 3 Manager URL, enrollment token and agent transport; legacy polling settings are unsupported."
 if [ "$options" != /config/options.json ]; then
-    cp "$options" /config/options.json.tmp
     mv /config/options.json.tmp /config/options.json
 fi
+options=/config/options.json
 [ -S /var/run/docker.sock ] || fail "Docker socket missing. Disable Protection mode for this add-on."
 # Never chmod/chown the host socket. Fail closed if the agent user could bypass the proxy.
 "$su_exec" 65532:65532 sh -c 'test ! -w /var/run/docker.sock' || \

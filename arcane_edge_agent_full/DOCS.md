@@ -9,7 +9,7 @@
 
 ## Features and host limits
 
-This package uses the pinned official Arcane agent image unchanged, adding only Home Assistant image labels. Supervisor passes Configuration fields directly as environment variables (`legacy: true`); there is no custom startup script. It runs as root with `DOCKER_HOST=unix:///run/docker.sock`. There is no method/path proxy. Container deployment, start/stop/restart, deletion, exec/terminal, image management, networks and volumes are available through the agent, subject to your Arcane user permissions and Docker host capabilities.
+This package inherits the pinned official Arcane agent image and adds a static-shell option migration launcher. Supervisor passes Configuration fields directly as environment variables (`legacy: true`); a startup launcher maps old URL and token fields to their Arcane 3 equivalents and removes legacy variables before executing the official agent. It runs as root with `DOCKER_HOST=unix:///run/docker.sock`. There is no method/path proxy. Container deployment, start/stop/restart, deletion, exec/terminal, image management, networks and volumes are available through the agent, subject to your Arcane user permissions and Docker host capabilities.
 
 Host filesystem browsing, arbitrary Compose bind mounts, hardware access, GPU support and Swarm networking depend on the host configuration. This package does not mount the host root or Docker volume directory into the agent. Docker resolves bind source paths on the host, not relative to the agent container. Direct Docker access can itself create containers with additional host mounts or privileges.
 
@@ -31,4 +31,4 @@ For Docker permission errors, verify Protection mode is off. Supervisor mounts t
 
 ## Upgrading from Arcane 2
 
-Arcane 3 removes polling and legacy agent enrollment. Back up the add-on, upgrade your separate Manager to Arcane 3, and generate a new enrollment token. In Configuration, replace the old options with `ARCANE_MANAGER_API_URL`, `ARCANE_AGENT_TOKEN` and `ARCANE_AGENT_TRANSPORT: auto`, then re-enroll this agent. Old saved pairing settings cannot be reused for this upgrade. Keep the public configuration folder to preserve state.
+Back up first and upgrade the Manager and agents to Arcane 2.17.3, starting each once, before upgrading the Manager to Arcane 3. The add-on automatically reuses old `MANAGER_API_URL` and `AGENT_TOKEN` Configuration fields when the corresponding `ARCANE_*` fields are blank, and uses `auto` instead of polling. It also corrects an escaped `http\://` or `https\://` prefix. Explicit nonempty new URL and token fields take precedence. Existing edge-agent API keys remain usable; former direct agents need a new enrollment token. Migration happens at startup; the UI fields are not rewritten. Keep the old fields until you have entered the corresponding new values. Keep the public configuration folder to preserve state.
